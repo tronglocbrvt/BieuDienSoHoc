@@ -14,13 +14,21 @@ public:
 	~QInt();
 
 	// ============================ CÁC HÀM CHUYỂN ĐỔI ============================
+	
+	// Hàm nhập từ chuỗi
+	QInt fromDecToQInt(string str); // chuyển chuỗi thập phân sang QInt
+	QInt fromBinToQInt(string); // chuyển chuỗi nhị phân sang QInt
+	QInt fromHexToQInt(string); // chuyển chuỗi thập lục phân sang QInt
+	QInt fromStringToQInt(string, unsigned short b); // chuyển chuỗi hệ cơ số b sang QInt
+
+	// Hàm xuất từ QInt ra chuỗi
+	string QIntToDecStr(); // chuyển QInt sang chuỗi thập phân
+	string QIntToBinStr(); // chuyển QInt sang chuỗi nhị phân
+	string QIntToHexStr(); // chuyển QInt sang chuỗi thập lục phân
+	string QIntToString(unsigned short b); // chuyển QInt sang chuỗi ở hệ cơ số b
+
+	// Các hàm chuyển đổi khác
 	QInt toTwoCompliment(); // chuyển sang dạng bù 2
-	QInt fromDec(string str); // chuyển chuỗi thập phân sang QInt
-	QInt fromBin(string);
-	QInt fromHex(string);
-	QInt fromString(string, string);
-
-
 	// ============================ TOÁN TỬ ============================
 	
 	// Toán tử + - * /
@@ -50,8 +58,8 @@ public:
 	QInt& ror();
 
 	// ============================ HÀM PHỤ TRỢ ============================
-	bool GetBit(QInt q, unsigned short i); // lấy giá trị bit ở vị trị i
-	void SetBit(QInt& q, unsigned short i, bool bit); // tạo giá trị bit tại vị trí i
+	bool GetBit(unsigned short i); // lấy giá trị bit ở vị trị i
+	void SetBit(unsigned short i, bool bit); // tạo giá trị bit tại vị trí i
 
 	string StrDiv2(string str); // hàm chia chuỗi thập phân cho 2
 	bool isNegative(); // kiểm tra có phải số âm hay không
