@@ -1,7 +1,14 @@
-﻿#include <iostream>
+﻿#include "QInt.h"
 
 int main()
 {
-    std::cout << "Hello World!\n";
+	string a = "-1"; 
+
+	QInt res;
+	res = res.fromDecToQInt(a);
+
+	cout << a;
+
+	return 0;
 }
 
