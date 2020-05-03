@@ -55,6 +55,58 @@ QInt QInt::fromBinToQInt(string str)
 {
 	QInt res;
 
+	unsigned short length = str.size(); // lưu chiều dài chuỗi
+
+	for (int i = 0; i < length; i++)
+	{
+		res.SetBit(length - 1 - i, str[i] - '0');
+	}
+
+	return res;
+}
+
+// chuyển chuỗi thập lục phân sang QInt
+QInt QInt::fromHexToQInt(string str)
+{
+	QInt res;
+
+	// Kiểm tra đầu vào và chuẩn hóa về dạng viết hoa
+	for (int i = 0; i < str.size(); i++)
+	{
+		if (str[i] >= 'a' && str[i] <= 'z')
+			str[i] -= 32;
+		
+	}
+
+	int pos = 0;
+	unsigned short digit;
+
+	for (int i = str.size() - 1; i > -1; i--) 
+	{
+		if (str[i] >= '0' && str[i] <= '9') // nếu hexa ở dạng từ 0 -> 9
+			digit = str[i] - '0';
+		else // hexa ở dạng A B C D E F (10 -> 15)
+			digit = str[i] + 10 - 'A';
+		
+		for (int j = 0; j < 4; j++) // mỗi ký tự trong hexa được lưu bởi 4 bit nhị phân
+		{
+			unsigned short bit = digit & 1; // AND với 1 để lấy ra bit cuối
+			res.SetBit(pos, bit); // set bit vào QInt
+			pos++; // tăng vị trí set bit
+			digit = digit >> 1; // do được biểu diễn bởi 4 bit nên dịch phải 1 bit để lấy bit tiếp theo
+		}
+	}
+
+	return res;
+}
+
+// chuyển QInt sang chuỗi thập phân
+string QInt::QIntToDecStr()
+{
+	string res;
+
+
+
 	return res;
 }
 
@@ -86,6 +138,42 @@ void QInt::SetBit(unsigned short i, unsigned short bit)
 	else { // bit 0
 		data[block] = data[block] & (~(1 << i)); // AND với 0 ra 0
 	}
+}
+
+// Cộng 2 chuỗi thập phân dương
+string QInt::plusString(string str1, string str2)
+{
+	string res;
+	string temp;
+
+	// kiếm tra sự chênh lệch độ dài 2 chuỗi
+	int length = str1.length() - str2.length();
+
+	// Thêm 0 vào trước chuỗi có độ dài nhỏ hơn
+	for (int i = 0; i < abs(length); i++)
+		temp += '0';
+	if (length < 0) // str1 ngắn hơn
+		str1 = temp + str1;
+	else // str 2 ngắn hơn
+		str2 = temp + str2; 
+
+	// cộng 2 chuỗi dương
+	int carry = 0; // nhớ
+	for (int i = str1.length() - 1; i >= 0; i--) // lúc này str1.length() == str2.length() do đã thêm 0 vào trước chuỗi ngắn hơn
+	{
+		int tmp_1 = str1[i] - '0';
+		int tmp_2 = str2[i] - '0';
+		int  c = tmp_1 + tmp_2 + carry;
+		carry = c / 10; // cập nhật lại nhớ
+		res += c % 10 + '0';
+	}
+
+	if (carry != 0)
+		res += carry + '0';
+
+	reverse(res.begin(), res.end()); // đảo ngược chuỗi kết quả
+
+	return res;
 }
 
 // hàm chia chuỗi thập phân dương cho 2
@@ -137,7 +225,7 @@ QInt QInt::toTwoCompliment(QInt q)
 //	QInt Result = *this;
 //	QInt Carry;
 //
-//	while (!(q.isZero()))
+//	while (!(q.isZero())
 //	{
 //		//Carry là những bit cùng là 1 giữa 2 số.
 //		Carry = Result & q;

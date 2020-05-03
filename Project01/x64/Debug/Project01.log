@@ -1,2 +1,6 @@
-﻿  Project01.cpp
+﻿  QInt.cpp
+c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(58): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned short', possible loss of data
+c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(84): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(150): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(162): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   Project01.vcxproj -> C:\Users\trong\OneDrive - VNU-HCMUS\Learning HCMUS\4th Semester\Kiến trúc máy tính & Hợp ngữ\BieuDienSoHoc\x64\Debug\Project01.exe

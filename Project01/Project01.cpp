@@ -2,12 +2,13 @@
 
 int main()
 {
-	string a = "-1"; 
+	string a = "152"; 
 
+	string b = "5673";
 	QInt res;
-	res = res.fromDecToQInt(a);
+	//res = res.fromDecToQInt(a);
 
-	cout << a;
+	cout << res.plusString(a, b) << endl;
 
 	return 0;
 }

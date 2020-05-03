@@ -20,12 +20,12 @@ public:
 	// Hàm nhập từ chuỗi
 	QInt fromDecToQInt(string str); // chuyển chuỗi thập phân sang QInt
 	QInt fromBinToQInt(string str); // chuyển chuỗi nhị phân sang QInt
-	/*QInt fromHexToQInt(string str); // chuyển chuỗi thập lục phân sang QInt
-	QInt fromStringToQInt(string str, unsigned short b); // chuyển chuỗi hệ cơ số b sang QInt
+	QInt fromHexToQInt(string str); // chuyển chuỗi thập lục phân sang QInt
+	// QInt fromStringToQInt(string str, unsigned short b); // chuyển chuỗi hệ cơ số b sang QInt
 
 	// Hàm xuất từ QInt ra chuỗi
 	string QIntToDecStr(); // chuyển QInt sang chuỗi thập phân
-	string QIntToBinStr(); // chuyển QInt sang chuỗi nhị phân
+	/* string QIntToBinStr(); // chuyển QInt sang chuỗi nhị phân
 	string QIntToHexStr(); // chuyển QInt sang chuỗi thập lục phân
 	string QIntToString(unsigned short b); // chuyển QInt sang chuỗi ở hệ cơ số b */
 
@@ -63,6 +63,7 @@ public:
 	bool GetBit(unsigned short i); // lấy giá trị bit ở vị trị i
 	void SetBit(unsigned short i, unsigned short bit); // tạo giá trị bit tại vị trí i
 
+	string plusString(string str1, string str2); // Cộng 2 chuỗi thập phân dương
 	string StrDiv2(string str); // hàm chia chuỗi thập phân dương cho 2
 	bool isNegative(); // kiểm tra có phải số âm hay không
 	bool isZero(); // kiểm tra có bằng 0 hay không
