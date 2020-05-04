@@ -2,9 +2,11 @@
 
 #include <iostream>
 #include <string>
+#include <map>
 using namespace std;
 
 #define NUM_BLOCK 4 // số lượng block là 4 vì data có 4 phần tử
+#define NUM_BIT 128 // 128 bit
 class QInt
 {
 private: 
@@ -21,23 +23,24 @@ public:
 	QInt fromDecToQInt(string str); // chuyển chuỗi thập phân sang QInt
 	QInt fromBinToQInt(string str); // chuyển chuỗi nhị phân sang QInt
 	QInt fromHexToQInt(string str); // chuyển chuỗi thập lục phân sang QInt
-	// QInt fromStringToQInt(string str, unsigned short b); // chuyển chuỗi hệ cơ số b sang QInt
+	QInt fromStringToQInt(string str, unsigned short b); // chuyển chuỗi hệ cơ số b sang QInt
 
 	// Hàm xuất từ QInt ra chuỗi
 	string QIntToDecStr(); // chuyển QInt sang chuỗi thập phân
 	string QIntToBinStr(); // chuyển QInt sang chuỗi nhị phân
-	/*string QIntToHexStr(); // chuyển QInt sang chuỗi thập lục phân
-	string QIntToString(unsigned short b); // chuyển QInt sang chuỗi ở hệ cơ số b */
+	string QIntToHexStr(); // chuyển QInt sang chuỗi thập lục phân
+	string QIntToString(unsigned short b); // chuyển QInt sang chuỗi ở hệ cơ số b
 
 	// Các hàm chuyển đổi khác
 	QInt toTwoCompliment(QInt q); // chuyển sang dạng bù 2
 	// ============================ TOÁN TỬ ============================
 	
-	// Toán tử + - * /
+	// Toán tử + - * / %
 	QInt operator+(QInt q);
 	QInt operator-(QInt q);
-	// QInt operator*(const QInt& M);
-	// QInt operator/(const QInt& M);
+	QInt operator*(QInt M);
+	QInt operator/(QInt M);
+	QInt operator%(QInt M); // phép lấy dư
 
 	// Toán tử so sánh và gán
 	bool operator>(QInt q);
@@ -57,8 +60,8 @@ public:
 	// Toán tử dịch trái, dịch phải, xoay trái, xoay phải
 	QInt operator<<(int x);
 	QInt operator>>(int x);
-	/*QInt& rol();
-	QInt& ror(); */
+	QInt& rol();
+	QInt& ror(); 
 
 	// ============================ HÀM PHỤ TRỢ ============================
 	unsigned short GetBit(unsigned short i); // lấy giá trị bit ở vị trị i

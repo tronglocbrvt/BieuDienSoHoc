@@ -97,13 +97,24 @@ QInt QInt::fromHexToQInt(string str)
 	return res;
 }
 
+// chuyển chuỗi hệ cơ số b sang QInt
+QInt QInt::fromStringToQInt(string str, unsigned short b)
+{
+	if (b == 2)
+		return fromBinToQInt(str);
+	if (b == 10)
+		return fromDecToQInt(str);
+	if (b == 16)
+		return fromHexToQInt(str);
+}
+
 // chuyển QInt sang chuỗi thập phân
 string QInt::QIntToDecStr()
 { 
 	string res = "0";
 
 	string tmp = "1"; // tmp để lưu giá trị tại 2^n, ban đầu 2^0 = 1
-	for (int i = 0; i < 127; i++) // chạy 127 bit, bit 128 (bit dấu -> xét sau)
+	for (int i = 0; i < NUM_BIT - 1; i++) // chạy 127 bit, bit 128 (bit dấu -> xét sau)
 	{
 		if (GetBit(i) == 1) // chỉ cập nhật giá trị tại những nơi có bit = 1
 			res = plusString(res, tmp);
@@ -111,7 +122,7 @@ string QInt::QIntToDecStr()
 	}
 
 	// xét bit dấu
-	if (GetBit(127) == 1) // nếu bit dấu = 1 -> số âm -> res = -(2^127 - res) mà 2^127 = tmp
+	if (GetBit(NUM_BIT - 1) == 1) // nếu bit dấu = 1 -> số âm -> res = -(2^127 - res) mà 2^127 = tmp
 		res = '-' + minusString(tmp, res);
 
 	return res;
@@ -122,12 +133,70 @@ string QInt::QIntToBinStr()
 {
 	string res;
 
-	for (int i = 127; i >= 0; i--) 
+	for (int i = NUM_BIT - 1; i >= 0; i--) 
 	{
 		res += GetBit(i) + '0';
 	}
 
 	return res;
+}
+
+string QInt::QIntToHexStr()
+{
+	string res; // chuỗi kết quả
+
+	map<string,string> mp; // lưu các giá trị đặc biệt của 16 ký tự hexa
+	mp["0000"] = "0";
+	mp["0001"] = "1";
+	mp["0010"] = "2";
+	mp["0011"] = "3";
+	mp["0100"] = "4";
+	mp["0101"] = "5";
+	mp["0110"] = "6";
+	mp["0111"] = "7";
+	mp["1000"] = "8";
+	mp["1001"] = "9";
+	mp["1010"] = "A";
+	mp["1011"] = "B";
+	mp["1100"] = "C";
+	mp["1101"] = "D";
+	mp["1110"] = "E";
+	mp["1111"] = "F";
+	
+	for (int i = 0; i < NUM_BIT - 1; i = i + 4) // vì mỗi ký tự hexa được biểu diễn bằng 4 bit -> bước nhảy là 4
+	{
+		string temp; // lưu dãy bit của ký tự hexa
+
+		for (int j = 3; j >= 0; j--) // duyệt từng bit trong bộ 4 bit đại diện cho 1 ký tự hexa
+		{
+			temp += GetBit(i + j) + '0';
+		}
+
+		res += mp[temp];
+	}
+
+	if (res.size() == 0) return "0";
+
+	// xóa các số 0 thừa
+	while (res.length() > 1 && res[res.length() - 1] == '0')
+	{
+		res.pop_back();
+	}
+
+	reverse(res.begin(), res.end()); // đảo ngược chuỗi kết quả
+
+	return res;
+}
+
+// chuyển QInt sang chuỗi ở hệ cơ số b
+string QInt::QIntToString(unsigned short b)
+{
+	if (b == 2)
+		return QIntToBinStr();
+	if (b == 10)
+		return QIntToDecStr();
+	if (b == 16)
+		return QIntToHexStr();
 }
 
 // lấy giá trị bit ở vị trị i
@@ -317,7 +386,7 @@ QInt QInt::operator+(QInt q)
 	QInt res; // lưu kết quả
 	unsigned short carry = 0; // nhớ
 	
-	for (int i = 0; i < 128; i++)
+	for (int i = 0; i < NUM_BIT; i++)
 	{
 		unsigned short tmp = GetBit(i) + q.GetBit(i) + carry;
 		res.SetBit(i, tmp % 2);
@@ -340,23 +409,164 @@ QInt QInt::operator-(QInt q) // ta chuyển thành cộng a - b = a + (-b)
 	return res;
 }
 
+// toán tử nhân theo thuật toán Booth
+QInt QInt::operator*(QInt M)
+{
+	QInt Q = *this; // số nhân
+	QInt A;
+	unsigned short tmp = 0;
+
+	for (int i = 0; i < NUM_BIT; i++)
+	{
+		unsigned short lastQ = Q.GetBit(0);
+		if (lastQ == 1 && tmp == 0) // Q_0 = 1 và Q_-1 = 0
+			A = A - M;
+		else if (lastQ == 0 && tmp == 1) // Q_0 = 0 và Q_-1 = 1
+			A = A + M;
+
+		unsigned short lastA = A.GetBit(0); // bit cuối của A
+		A = A >> 1; // dịch phải số học A 1 bit.
+		Q = Q >> 1; // dịch phải số học 1 bit
+		// do ta thêm bit cuối của A vào đầu Q nên ta đặt lại giá trị của bit đầu của Q:
+		Q.SetBit(NUM_BIT - 1, lastA); // set lại bit đầu của Q
+		tmp = lastQ; // do dịch phải nên tmp bằng Q_0
+	}
+
+	return Q;
+}
+
+// toán tử chia
+QInt QInt::operator/(QInt M)
+{
+	QInt Q = *this; // số chia
+	QInt A;
+	bool sign = false; // kiểm tra M và Q có trái dấu hay không
+
+	// Kiểm tra có chia cho 0 hay không
+	if (M.isZero()) // chia cho 0
+	{
+		return A; // return 0
+	}
+
+	// Kiểm tra dấu Q và M và chuyển Q, M về không dấu
+	if (Q.isNegative() && !M.isNegative())
+	{
+		Q = toTwoCompliment(Q); // chuyển Q từ âm sang dương
+		sign = true;
+	}
+
+	else if (!Q.isNegative() && M.isNegative() == 1)
+	{
+		M = toTwoCompliment(M); // chuyển M từ âm sang dương
+		sign = true;
+	}
+
+	else if (Q.isNegative() && M.isNegative())
+	{
+		Q = toTwoCompliment(Q); // chuyển Q từ âm sang dương
+		M = toTwoCompliment(M); // chuyển M từ âm sang dương
+		// vì âm chia âm ra dương nên KHÔNG set sign = true;
+	}
+	// chia không dấu
+	for (int i = 0; i < NUM_BIT; i++)
+	{
+		unsigned short firstQ = Q.GetBit(127); // bit đầu của Q
+		A = A << 1; // dịch trái số học A 1 bit.
+		Q = Q << 1; // dịch trái số học 1 bit
+		// do ta thêm bit đầu của Q vào cuối A nên ta đặt lại giá trị của bit cuối của A:
+		A.SetBit(0, firstQ); // set lại bit cuối của A
+
+		A = A - M;
+		
+		if (A.isNegative()) // A < 0
+		{
+			Q.SetBit(0, 0);
+			A = A + M;
+		}
+		else
+			Q.SetBit(0, 1);
+	}
+
+	if (sign) // nếu khác dấu
+		Q = toTwoCompliment(Q); // đổi dấu thương 
+
+	return Q;
+}
+
+QInt QInt::operator%(QInt M)
+{
+	QInt Q = *this; // số chia
+	QInt A;
+	bool sign = false; // biến sign dấu của số dư
+
+	// Kiểm tra có chia cho 0 hay không
+	if (M.isZero()) // chia cho 0
+	{
+		return A; // return 0
+	}
+
+	// Kiểm tra dấu Q và M và chuyển Q, M về không dấu
+	if (Q.isNegative() && !M.isNegative())
+	{
+		Q = toTwoCompliment(Q); // chuyển Q từ âm sang dương
+		sign = true; // dư là âm
+	}
+
+	else if (!Q.isNegative() && M.isNegative() == 1)
+	{
+		M = toTwoCompliment(M); // chuyển M từ âm sang dương
+		sign = false; // dư là dương
+	}
+
+	else if (Q.isNegative() && M.isNegative())
+	{
+		Q = toTwoCompliment(Q); // chuyển Q từ âm sang dương
+		M = toTwoCompliment(M); // chuyển M từ âm sang dương
+		sign = true; // dư là âm
+	}
+	// chia không dấu
+	for (int i = 0; i < NUM_BIT; i++)
+	{
+		unsigned short firstQ = Q.GetBit(127); // bit đầu của Q
+		A = A << 1; // dịch trái số học A 1 bit.
+		Q = Q << 1; // dịch trái số học 1 bit
+		// do ta thêm bit đầu của Q vào cuối A nên ta đặt lại giá trị của bit cuối của A:
+		A.SetBit(0, firstQ); // set lại bit cuối của A
+
+		A = A - M;
+
+		if (A.isNegative()) // A < 0
+		{
+			Q.SetBit(0, 0);
+			A = A + M;
+		}
+		else
+			Q.SetBit(0, 1);
+	}
+
+	if (sign) // nếu khác dấu
+		A = toTwoCompliment(A); // đổi dấu thương 
+
+	return A;
+}
+
 // toán tử so sánh >
 bool QInt::operator>(QInt q) // so sánh this với q
 {
 	// trường hợp khác dấu
-	if (GetBit(127) > q.GetBit(127))
+	if (GetBit(NUM_BIT - 1) > q.GetBit(NUM_BIT - 1))
 		return false; // this < q và bit 1 biểu thị số âm
 
-	if (GetBit(127) < q.GetBit(127))
+	if (GetBit(NUM_BIT - 1) < q.GetBit(NUM_BIT - 1))
 		return true; // this > q và bit 0 < 1 (0 biểu thị số dương)
 
 	// trường hợp cùng dấu
 	for (int i = 126; i >= 0; i--)
 	{
 		if (GetBit(i) < q.GetBit(i))
-			return GetBit(127);
+			return GetBit(NUM_BIT - 1);
 		if (GetBit(i) > q.GetBit(i))
-			return ~GetBit(127);
+			return ~GetBit(NUM_BIT - 1);
 	}
 
 	return false; // trường hợp bằng
@@ -384,7 +594,7 @@ bool QInt::operator!=(QInt q)
 
 bool QInt::operator==(QInt q)
 {
-	for (int i = 127; i >= 0; i--)
+	for (int i = NUM_BIT - 1; i >= 0; i--)
 	{
 		if (GetBit(i) != q.GetBit(i))
 			return false;
@@ -462,7 +672,7 @@ QInt QInt::operator<<(int x) // dịch trái x bit
 {
 	QInt res; 
 
-	for (int i = 127 - x; i >= 0; i--)
+	for (int i = NUM_BIT - 1 - x; i >= 0; i--)
 	{
 		res.SetBit(i + x, GetBit(i));
 	}
@@ -480,15 +690,35 @@ QInt QInt::operator>>(int x) // dịch phải x bit
 {
 	QInt res; 
 
-	for (int i = x; i < 128; i++) // dịch phải
+	for (int i = x; i < NUM_BIT; i++) // dịch phải
 	{
 		res.SetBit(i - x, GetBit(i));
 	}
 
-	for (int i = 127 - x; i < 128; i++) // chèn thêm bit dấu
+	for (int i = NUM_BIT - 1 - x; i < NUM_BIT; i++) // chèn thêm bit dấu
 	{
-		res.SetBit(i, GetBit(127));
+		res.SetBit(i, GetBit(NUM_BIT - 1));
 	}
 
 	return res;
+}
+
+// phép xoay trái
+QInt & QInt::rol()
+{
+	unsigned short bit = GetBit(NUM_BIT - 1); // lưu bit NUM_BIT - 1
+	*this = *this << 1; // dịch trái 1 bit
+	SetBit(0, bit); // chèn bit bị đẩy vào
+
+	return *this;
+}
+
+// phép xoay phải
+QInt & QInt::ror()
+{
+	unsigned short bit = GetBit(0); // lưu bit thứ 0
+	*this = *this >> 1; // dịch phải 1 bit
+	SetBit(NUM_BIT - 1, bit); // chèn bit bị đẩy vào
+
+	return *this;
 }
