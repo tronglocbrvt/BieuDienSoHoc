@@ -13,8 +13,10 @@ private:
 	int data[4]; // lưu kiểu QInt 16 bytes dưới dạng 4 số nguyên, mỗi số nguyên là 4 bytes. 
 
 public:
-	QInt();
-	QInt(const int& n);
+
+	// ============================ KHỞI TẠO VÀ HỦY ============================
+	QInt(); // khởi tạo mặc định
+	QInt(const int& n); // khởi tạo kiểu QInt từ số nguyên n
 	~QInt();
 
 	// ============================ CÁC HÀM CHUYỂN ĐỔI ============================
@@ -30,6 +32,9 @@ public:
 	string QIntToBinStr(); // chuyển QInt sang chuỗi nhị phân
 	string QIntToHexStr(); // chuyển QInt sang chuỗi thập lục phân
 	string QIntToString(unsigned short b); // chuyển QInt sang chuỗi ở hệ cơ số b
+
+	// Chuyển đổi giữa các cơ số
+	string BaseToBase(string str, unsigned short b); // chuyển đổi sang hệ cơ số b (2, 10, 16)
 
 	// Các hàm chuyển đổi khác
 	QInt toTwoCompliment(QInt q); // chuyển sang dạng bù 2

@@ -1,5 +1,7 @@
 ﻿#include "QInt.h"
 
+// ============================ KHỞI TẠO VÀ HỦY ============================
+
 // hàm khởi tạo kiểu QInt, khởi tạo 4 phần tử của data đều bằng 0 -> QInt gồm 128 bit 0
 QInt::QInt()
 {
@@ -16,6 +18,8 @@ QInt::QInt(const int & n)
 QInt::~QInt()
 {
 }
+
+// ============================ CÁC HÀM CHUYỂN ĐỔI ============================
 
 // chuyển chuỗi thập phân sang QInt
 QInt QInt::fromDecToQInt(string str)
@@ -141,6 +145,7 @@ string QInt::QIntToBinStr()
 	return res;
 }
 
+// chuyển QInt sang chuỗi thập lục phân
 string QInt::QIntToHexStr()
 {
 	string res; // chuỗi kết quả
@@ -199,179 +204,13 @@ string QInt::QIntToString(unsigned short b)
 		return QIntToHexStr();
 }
 
-// lấy giá trị bit ở vị trị i
-unsigned short QInt::GetBit(unsigned short i) // lấy giá trị ở bit thứ i
+string QInt::BaseToBase(string str, unsigned short b)
 {
-	unsigned short block = i / 32; // Block data cần chọn
-	unsigned short pos = i % 32; // Vị trí cần lấy trong block data
+	QInt q = fromStringToQInt(str, b);
 
-	if (block >= NUM_BLOCK || block < 0)
-		return 0;
-
-	return ((data[block] & (1 << pos)) ? 1 : 0); 
-}
-
-// tạo giá trị bit tại vị trí i
-void QInt::SetBit(unsigned short i, unsigned short bit)
-{
-	unsigned short block = i / 32; // Xác định Block data
-	unsigned short pos = i % 32; // vi trí cần set giá trị bit
-
-	if (block >= NUM_BLOCK || block < 0)
-		return;
-
-	if (bit == 1) // nếu là bit 1
-	{
-		data[block] = data[block] | (1 << i); // AND với 1 ra 1
-	}
-	else { // bit 0
-		data[block] = data[block] & (~(1 << i)); // AND với 0 ra 0
-	}
-}
-
-string QInt::StrMulti2(string str)
-{
-	return plusString(str, str); // str * 2 = str + str
-}
-
-// Cộng 2 chuỗi thập phân dương
-string QInt::plusString(string str1, string str2)
-{
-	string res;
-	string temp;
-
-	// kiếm tra sự chênh lệch độ dài 2 chuỗi
-	int length = str1.length() - str2.length();
-
-	// Thêm 0 vào trước chuỗi có độ dài nhỏ hơn
-	for (int i = 0; i < abs(length); i++)
-		temp += '0';
-	if (length < 0) // str1 ngắn hơn
-		str1 = temp + str1;
-	else // str 2 ngắn hơn
-		str2 = temp + str2; 
-
-	// cộng 2 chuỗi dương
-	int carry = 0; // nhớ
-	for (int i = str1.length() - 1; i >= 0; i--) // lúc này str1.length() == str2.length() do đã thêm 0 vào trước chuỗi ngắn hơn
-	{
-		int tmp_1 = str1[i] - '0';
-		int tmp_2 = str2[i] - '0';
-		int  c = tmp_1 + tmp_2 + carry;
-		carry = c / 10; // cập nhật lại nhớ
-		res += c % 10 + '0';
-	}
-
-	if (carry != 0)
-		res += carry + '0';
-
-	// xóa các số 0 thừa
-	while (res.length() > 1 && res[res.length() - 1] == '0')
-	{
-		res.pop_back();
-	}
-
-	reverse(res.begin(), res.end()); // đảo ngược chuỗi kết quả
+	string res = QIntToString(b);	
 
 	return res;
-}
-
-// trừ 2 chuỗi thập phân dương
-string QInt::minusString(string str1, string str2)
-{
-	string res;
-	string temp;
-	bool sign = false; // dấu kết quả
-
-	// kiếm tra sự chênh lệch độ dài 2 chuỗi
-	int length = str1.length() - str2.length();
-
-	// Thêm 0 vào trước chuỗi có độ dài nhỏ hơn
-	for (int i = 0; i < abs(length); i++)
-		temp += '0';
-	if (length < 0) // str1 ngắn hơn
-		str1 = temp + str1;
-	else // str 2 ngắn hơn
-		str2 = temp + str2;
-
-	//Kiểm tra str1 hay str2 lớn hơn và chuyển str1 thành số lớn hơn.
-	if (strcmp(str1.c_str(), str2.c_str()) < 0)
-	{
-		string TempStr = str1;
-		str1 = str2;
-		str2 = TempStr;
-		sign = true; //a < b => a - b < 0
-	}
-
-	// trừ 2 chuỗi dương
-	int carry = 0; // nhớ
-	for (int i = str1.length() - 1; i >= 0; i--) // lúc này str1.length() == str2.length() do đã thêm 0 vào trước chuỗi ngắn hơn
-	{
-		if (str1[i] < carry + str2[i])
-		{
-			res += (10 + str1[i] - str2[i] - carry) + '0'; // mượn để trừ
-			carry = 1;
-		}
-		else
-		{
-			res += (str1[i] - str2[i] - carry) + '0'; // trừ bình thường
-			carry = 0;
-		}
-		
-	}
-
-	if (carry != 0)
-		res += carry + '0';
-
-	// xóa các số 0 thừa
-	while (res.length() > 1 && res[res.length() - 1] == '0')
-	{
-		res.pop_back();
-	}
-
-	if (sign == true) // là số âm
-		res += '-';
-
-	reverse(res.begin(), res.end()); // đảo ngược chuỗi kết qu
-
-	return res;
-}
-
-// hàm chia chuỗi thập phân dương cho 2
-string QInt::StrDiv2(string str)
-{
-	string res;
-
-	int mod = 0; // số dư bằng 0
-
-	for (int i = 0; i < str.size(); i++)
-	{
-		mod = mod * 10 + (str[i] - 48); // vì chia cho 2 nên chỉ cần xét đến TH 2 chữ số, 48 là ASCII của '0'
-
-		if ((mod >= 2 && i == 0) || i > 0) // khi chia cho 2 chỉ xét trường hợp số đầu tiên, những số sau nếu nhỏ
-										  // hơn 2 vẫn chia bình thường (thương tại lần chia đó = 0)
-			res.push_back((mod / 2) + '0');
-
-		mod %= 2; // cập nhật lại số dư của lần chia đó
-	}
-
-	return res;
-}
-
-// kiểm tra có phải số âm hay không
-bool QInt::isNegative()
-{
-	return data[NUM_BLOCK - 1] & 1; // bit đầu của QInt (bit dấu) tức là bit đầu của data[3] (lưu ý bit đầu là bit bên phải cùng vì 
-						// bit được đánh số thứ tự từ phải qua; AND với 1 ta lấy ra được giá trị của bit đó.
-}
-
-// kiểm tra có bằng 0 hay không
-bool QInt::isZero()
-{
-	for (int i = 0; i < NUM_BLOCK; i++)
-		if (data[i] != 0) // nếu phát hiện khác 0 -> return false (nghĩa là QInt khác 0)
-			return false;
-	return true;
 }
 
 // chuyển sang bù 2
@@ -379,6 +218,8 @@ QInt QInt::toTwoCompliment(QInt q)
 {
 	return (~q + QInt(1)); // đổi dấu rồi cộng 1
 }
+
+// ============================ TOÁN TỬ CỘNG, TRỪ, NHÂN, CHIA, LẤY DƯ ============================
 
 // Toán tử cộng
 QInt QInt::operator+(QInt q)
@@ -493,6 +334,7 @@ QInt QInt::operator/(QInt M)
 	return Q;
 }
 
+// Toán tử lấy dư
 QInt QInt::operator%(QInt M)
 {
 	QInt Q = *this; // số chia
@@ -549,6 +391,8 @@ QInt QInt::operator%(QInt M)
 
 	return A;
 }
+
+// ============================ TOÁN TỬ SO SÁNH & GÁN ============================
 
 // toán tử so sánh >
 bool QInt::operator>(QInt q) // so sánh this với q
@@ -617,6 +461,8 @@ QInt & QInt::operator=(const QInt& q)
 	return *this;
 }
 
+// ============================ TOÁN TỬ NOT AND OR XOR ============================
+
 // toán tử NOT
 QInt& QInt::operator~()
 {
@@ -667,6 +513,8 @@ QInt QInt::operator^(const QInt & q)
 	return res;
 }
 
+// ============================ TOÁN TỬ DỊCH TRÁI, DỊCH PHẢI ============================
+
 // Phép dịch trái số học
 QInt QInt::operator<<(int x) // dịch trái x bit
 {
@@ -703,6 +551,8 @@ QInt QInt::operator>>(int x) // dịch phải x bit
 	return res;
 }
 
+// ============================ TOÁN TỬ XOAY TRÁI, XOAY PHẢI ============================
+
 // phép xoay trái
 QInt & QInt::rol()
 {
@@ -721,4 +571,181 @@ QInt & QInt::ror()
 	SetBit(NUM_BIT - 1, bit); // chèn bit bị đẩy vào
 
 	return *this;
+}
+
+// ============================ CÁC HÀM HỖ TRỢ ============================
+
+// lấy giá trị bit ở vị trị i
+unsigned short QInt::GetBit(unsigned short i) // lấy giá trị ở bit thứ i
+{
+	unsigned short block = i / 32; // Block data cần chọn
+	unsigned short pos = i % 32; // Vị trí cần lấy trong block data
+
+	if (block >= NUM_BLOCK || block < 0)
+		return 0;
+
+	return ((data[block] & (1 << pos)) ? 1 : 0);
+}
+
+// tạo giá trị bit tại vị trí i
+void QInt::SetBit(unsigned short i, unsigned short bit)
+{
+	unsigned short block = i / 32; // Xác định Block data
+	unsigned short pos = i % 32; // vi trí cần set giá trị bit
+
+	if (block >= NUM_BLOCK || block < 0)
+		return;
+
+	if (bit == 1) // nếu là bit 1
+	{
+		data[block] = data[block] | (1 << i); // AND với 1 ra 1
+	}
+	else { // bit 0
+		data[block] = data[block] & (~(1 << i)); // AND với 0 ra 0
+	}
+}
+
+string QInt::StrMulti2(string str)
+{
+	return plusString(str, str); // str * 2 = str + str
+}
+
+// Cộng 2 chuỗi thập phân dương
+string QInt::plusString(string str1, string str2)
+{
+	string res;
+	string temp;
+
+	// kiếm tra sự chênh lệch độ dài 2 chuỗi
+	int length = str1.length() - str2.length();
+
+	// Thêm 0 vào trước chuỗi có độ dài nhỏ hơn
+	for (int i = 0; i < abs(length); i++)
+		temp += '0';
+	if (length < 0) // str1 ngắn hơn
+		str1 = temp + str1;
+	else // str 2 ngắn hơn
+		str2 = temp + str2;
+
+	// cộng 2 chuỗi dương
+	int carry = 0; // nhớ
+	for (int i = str1.length() - 1; i >= 0; i--) // lúc này str1.length() == str2.length() do đã thêm 0 vào trước chuỗi ngắn hơn
+	{
+		int tmp_1 = str1[i] - '0';
+		int tmp_2 = str2[i] - '0';
+		int  c = tmp_1 + tmp_2 + carry;
+		carry = c / 10; // cập nhật lại nhớ
+		res += c % 10 + '0';
+	}
+
+	if (carry != 0)
+		res += carry + '0';
+
+	// xóa các số 0 thừa
+	while (res.length() > 1 && res[res.length() - 1] == '0')
+	{
+		res.pop_back();
+	}
+
+	reverse(res.begin(), res.end()); // đảo ngược chuỗi kết quả
+
+	return res;
+}
+
+// trừ 2 chuỗi thập phân dương
+string QInt::minusString(string str1, string str2)
+{
+	string res;
+	string temp;
+	bool sign = false; // dấu kết quả
+
+	// kiếm tra sự chênh lệch độ dài 2 chuỗi
+	int length = str1.length() - str2.length();
+
+	// Thêm 0 vào trước chuỗi có độ dài nhỏ hơn
+	for (int i = 0; i < abs(length); i++)
+		temp += '0';
+	if (length < 0) // str1 ngắn hơn
+		str1 = temp + str1;
+	else // str 2 ngắn hơn
+		str2 = temp + str2;
+
+	//Kiểm tra str1 hay str2 lớn hơn và chuyển str1 thành số lớn hơn.
+	if (strcmp(str1.c_str(), str2.c_str()) < 0)
+	{
+		string TempStr = str1;
+		str1 = str2;
+		str2 = TempStr;
+		sign = true; //a < b => a - b < 0
+	}
+
+	// trừ 2 chuỗi dương
+	int carry = 0; // nhớ
+	for (int i = str1.length() - 1; i >= 0; i--) // lúc này str1.length() == str2.length() do đã thêm 0 vào trước chuỗi ngắn hơn
+	{
+		if (str1[i] < carry + str2[i])
+		{
+			res += (10 + str1[i] - str2[i] - carry) + '0'; // mượn để trừ
+			carry = 1;
+		}
+		else
+		{
+			res += (str1[i] - str2[i] - carry) + '0'; // trừ bình thường
+			carry = 0;
+		}
+
+	}
+
+	if (carry != 0)
+		res += carry + '0';
+
+	// xóa các số 0 thừa
+	while (res.length() > 1 && res[res.length() - 1] == '0')
+	{
+		res.pop_back();
+	}
+
+	if (sign == true) // là số âm
+		res += '-';
+
+	reverse(res.begin(), res.end()); // đảo ngược chuỗi kết qu
+
+	return res;
+}
+
+// hàm chia chuỗi thập phân dương cho 2
+string QInt::StrDiv2(string str)
+{
+	string res;
+
+	int mod = 0; // số dư bằng 0
+
+	for (int i = 0; i < str.size(); i++)
+	{
+		mod = mod * 10 + (str[i] - 48); // vì chia cho 2 nên chỉ cần xét đến TH 2 chữ số, 48 là ASCII của '0'
+
+		if ((mod >= 2 && i == 0) || i > 0) // khi chia cho 2 chỉ xét trường hợp số đầu tiên, những số sau nếu nhỏ
+										  // hơn 2 vẫn chia bình thường (thương tại lần chia đó = 0)
+			res.push_back((mod / 2) + '0');
+
+		mod %= 2; // cập nhật lại số dư của lần chia đó
+	}
+
+	return res;
+}
+
+// kiểm tra có phải số âm hay không
+bool QInt::isNegative()
+{
+	return data[NUM_BLOCK - 1] & 1; // bit đầu của QInt (bit dấu) tức là bit đầu của data[3] (lưu ý bit đầu là bit bên phải cùng vì 
+						// bit được đánh số thứ tự từ phải qua; AND với 1 ta lấy ra được giá trị của bit đó.
+}
+
+// kiểm tra có bằng 0 hay không
+bool QInt::isZero()
+{
+	for (int i = 0; i < NUM_BLOCK; i++)
+		if (data[i] != 0) // nếu phát hiện khác 0 -> return false (nghĩa là QInt khác 0)
+			return false;
+	return true;
 }
