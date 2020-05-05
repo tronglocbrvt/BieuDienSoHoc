@@ -204,11 +204,12 @@ string QInt::QIntToString(unsigned short b)
 		return QIntToHexStr();
 }
 
-string QInt::BaseToBase(string str, unsigned short b)
+// chuyển chuỗi từ hệ cơ số a sang hệ cơ số b
+string QInt::BaseToBase(string str, unsigned short a, unsigned short b)
 {
-	QInt q = fromStringToQInt(str, b);
+	QInt q = fromStringToQInt(str, a);
 
-	string res = QIntToString(b);	
+	string res = q.QIntToString(b);	
 
 	return res;
 }

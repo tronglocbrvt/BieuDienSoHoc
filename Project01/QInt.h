@@ -34,7 +34,7 @@ public:
 	string QIntToString(unsigned short b); // chuyển QInt sang chuỗi ở hệ cơ số b
 
 	// Chuyển đổi giữa các cơ số
-	string BaseToBase(string str, unsigned short b); // chuyển đổi sang hệ cơ số b (2, 10, 16)
+	string BaseToBase(string str, unsigned short a, unsigned short b); // chuyển đổi chuỗi từ hệ cơ số a sang hệ cơ số b (2, 10, 16)
 
 	// Các hàm chuyển đổi khác
 	QInt toTwoCompliment(QInt q); // chuyển sang dạng bù 2
