@@ -142,6 +142,18 @@ string QInt::QIntToBinStr()
 		res += GetBit(i) + '0';
 	}
 
+	// xóa số 0 thừa
+	for (int i = 0; i < NUM_BIT; i++)
+	{
+		if (res[i] == '0')
+		{
+			res.erase(res.begin() + 0);
+			i--;
+		}
+		else
+			return res;
+	}
+
 	return res;
 }
 
