@@ -143,7 +143,7 @@ string QInt::QIntToBinStr()
 	}
 
 	// xóa số 0 thừa
-	for (int i = 0; i < NUM_BIT; i++)
+	for (int i = 0; i < NUM_BIT - 1; i++) // chừa lại bit cuối
 	{
 		if (res[i] == '0')
 		{
