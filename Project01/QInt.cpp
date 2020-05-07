@@ -529,7 +529,7 @@ QInt QInt::operator^(const QInt & q)
 // ============================ TOÁN TỬ DỊCH TRÁI, DỊCH PHẢI ============================
 
 // Phép dịch trái số học
-QInt QInt::operator<<(int x) // dịch trái x bit
+QInt QInt::operator<<(unsigned int x) // dịch trái x bit
 {
 	QInt res; 
 
@@ -547,7 +547,7 @@ QInt QInt::operator<<(int x) // dịch trái x bit
 }
 
 // Phép dịch phải số học
-QInt QInt::operator>>(int x) // dịch phải x bit
+QInt QInt::operator>>(unsigned int x) // dịch phải x bit
 {
 	QInt res; 
 
@@ -567,22 +567,28 @@ QInt QInt::operator>>(int x) // dịch phải x bit
 // ============================ TOÁN TỬ XOAY TRÁI, XOAY PHẢI ============================
 
 // phép xoay trái
-QInt & QInt::rol()
+QInt & QInt::rol(unsigned int x) // xoay trái x bit
 {
-	unsigned short bit = GetBit(NUM_BIT - 1); // lưu bit NUM_BIT - 1
-	*this = *this << 1; // dịch trái 1 bit
-	SetBit(0, bit); // chèn bit bị đẩy vào
-
+	int num = x % 128; // lấy số lượng bit cần xoay
+	for(int i = 0; i < num; i++)
+	{
+			unsigned short bit = GetBit(NUM_BIT - 1); // lưu bit NUM_BIT - 1
+			*this = *this << 1; // dịch trái 1 bit
+			SetBit(0, bit); // chèn bit bị đẩy vào
+	}
 	return *this;
 }
 
 // phép xoay phải
-QInt & QInt::ror()
+QInt & QInt::ror(unsigned int x) // xoay phải x bit
 {
-	unsigned short bit = GetBit(0); // lưu bit thứ 0
-	*this = *this >> 1; // dịch phải 1 bit
-	SetBit(NUM_BIT - 1, bit); // chèn bit bị đẩy vào
-
+	int num = x % 128; // lấy số lượng bit cần xoay
+	for (int i = 0; i < num; i++)
+	{
+			unsigned short bit = GetBit(0); // lưu bit thứ 0
+			*this = *this >> 1; // dịch phải 1 bit
+			SetBit(NUM_BIT - 1, bit); // chèn bit bị đẩy vào
+	}
 	return *this;
 }
 

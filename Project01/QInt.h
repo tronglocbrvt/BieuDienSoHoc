@@ -63,10 +63,10 @@ public:
 	QInt operator^(const QInt& q);
 
 	// Toán tử dịch trái, dịch phải, xoay trái, xoay phải
-	QInt operator<<(int x);
-	QInt operator>>(int x);
-	QInt& rol();
-	QInt& ror(); 
+	QInt operator<<(unsigned int x);
+	QInt operator>>(unsigned int x);
+	QInt& rol(unsigned int x); // xoay trái x bit
+	QInt& ror(unsigned int x); // xoay phải x bit
 
 	// ============================ HÀM PHỤ TRỢ ============================
 	unsigned short GetBit(unsigned short i); // lấy giá trị bit ở vị trị i
