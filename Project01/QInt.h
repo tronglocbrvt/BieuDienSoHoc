@@ -7,6 +7,7 @@ using namespace std;
 
 #define NUM_BLOCK 4 // số lượng block là 4 vì data có 4 phần tử
 #define NUM_BIT 128 // 128 bit
+
 class QInt
 {
 private: 
@@ -71,12 +72,11 @@ public:
 	// ============================ HÀM PHỤ TRỢ ============================
 	unsigned short GetBit(unsigned short i); // lấy giá trị bit ở vị trị i
 	void SetBit(unsigned short i, unsigned short bit); // tạo giá trị bit tại vị trí i
-
-	string StrMulti2(string str); // Nhân chuỗi dương cho 2 = double chuỗi
-	string plusString(string str1, string str2); // Cộng 2 chuỗi thập phân dương
-	string minusString(string str1, string str2); // trừ 2 chuỗi thập phân dương
-	string StrDiv2(string str); // hàm chia chuỗi thập phân dương cho 2
 	bool isNegative(); // kiểm tra có phải số âm hay không
 	bool isZero(); // kiểm tra có bằng 0 hay không
 };
 
+string StrMulti2(string str); // Nhân chuỗi dương cho 2 = double chuỗi
+string plusString(string str1, string str2); // Cộng 2 chuỗi thập phân dương
+string minusString(string str1, string str2); // trừ 2 chuỗi thập phân dương
+string StrDiv2(string str); // hàm chia chuỗi thập phân dương cho 2

@@ -37,7 +37,7 @@ QInt QInt::fromDecToQInt(string str)
 		sign = 0;
 
 	int i = 0; // bắt đầu set các bit từ data[0]
-	while (str != "0" && str != "")
+	while (str != "0" && str != "") 
 	{
 		unsigned short bit = (str[str.length() - 1] - 48) % 2; // chia 2 lấy phần dư
 		res.SetBit(i, bit); // set bit tại vị trí i
@@ -617,20 +617,20 @@ void QInt::SetBit(unsigned short i, unsigned short bit)
 
 	if (bit == 1) // nếu là bit 1
 	{
-		data[block] = data[block] | (1 << i); // AND với 1 ra 1
+		data[block] = data[block] | (1 << pos); // XOR với 1 ra 1
 	}
 	else { // bit 0
-		data[block] = data[block] & (~(1 << i)); // AND với 0 ra 0
+		data[block] = data[block] & (~(1 << pos)); // AND với 0 ra 0
 	}
 }
 
-string QInt::StrMulti2(string str)
+string StrMulti2(string str)
 {
 	return plusString(str, str); // str * 2 = str + str
 }
 
 // Cộng 2 chuỗi thập phân dương
-string QInt::plusString(string str1, string str2)
+string plusString(string str1, string str2)
 {
 	string res;
 	string temp;
@@ -672,7 +672,7 @@ string QInt::plusString(string str1, string str2)
 }
 
 // trừ 2 chuỗi thập phân dương
-string QInt::minusString(string str1, string str2)
+string minusString(string str1, string str2)
 {
 	string res;
 	string temp;
@@ -727,13 +727,13 @@ string QInt::minusString(string str1, string str2)
 	if (sign == true) // là số âm
 		res += '-';
 
-	reverse(res.begin(), res.end()); // đảo ngược chuỗi kết qu
+	reverse(res.begin(), res.end()); // đảo ngược chuỗi kết quả
 
 	return res;
 }
 
 // hàm chia chuỗi thập phân dương cho 2
-string QInt::StrDiv2(string str)
+string StrDiv2(string str)
 {
 	string res;
 
@@ -768,3 +768,4 @@ bool QInt::isZero()
 			return false;
 	return true;
 }
+
