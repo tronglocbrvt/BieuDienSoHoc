@@ -40,7 +40,7 @@ public:
 	//QFloat BinToDec(bool *bit); //Chuyen so QFloat nhi phan sang thap phan
 	//bool* DecToBin(QFloat x); //Chuyen so QFloat thap phan sang nhi phan
 
-	//QFloat operator +( QFloat &plus); //Toan tu +
+	QFloat operator+ (const QFloat& plus); //Toan tu +
 	//QFloat operator -( QFloat &minus); //Toan tu -
 	//QFloat operator *( QFloat &multiply); //Toan tu *
 	//QFloat operator /( QFloat &divide); //Toan tu /
@@ -48,6 +48,7 @@ public:
 	QFloat& operator=(const QFloat& q); //Toán tử gán = 
 
 	QFloat();
+	QFloat(string str);
 	~QFloat();
 	// ====================================== NHÓM HÀM KIỂM TRA ======================================
 	
@@ -56,7 +57,7 @@ public:
 	bool CheckNaN(); // Kiểm tra có phải là dạng NaN không
 	bool CheckInf(); // Kiểm tra có phải là dạng Infinity không
 
-	// ====================================== GET,SET BIT ======================================
+	// ====================================== GET,SET BIT VÀ CÁC HÀM HỖ TRỢ ======================================
 	void SetBit(int i, int bit); //Set bit tại vị trí i
 	int GetBit(int i) ; //Lấy bit ở vị trí i
 	string plusStringFloat(string str1, string str2); // cộng chuỗi thập phân
@@ -64,6 +65,10 @@ public:
 	string BinToDec(string str); // chuyển số nhị phân sang thập phân
 	string FracDiv2(string str); // chia chuỗi nhị phân cho 2
 	void roundingFrac(string a, string& fracPartBit); // Làm tròn phần thập phân
+	bool SignificandIsZero(string str, int intPart); // kiểm tra phần trị có bằng 0 hay không
+	string addBitString(string str1, string str2, int& carry); // cộng 2 dãy bit
+	string subBitString(string str1, string str2, int& carry); // trừ 2 dãy bit
+	string addSigned(string str1, string str2, QFloat x, QFloat y, int& carry);
 
 //	int GetSign() ; //Lay dau cua QFloat
 //	int SoSanhBit(bool bitX[], int lenX, bool bitY[], int lenY) ; //So sanh 2 day bit

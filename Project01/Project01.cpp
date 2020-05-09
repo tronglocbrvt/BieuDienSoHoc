@@ -248,10 +248,16 @@ int main(int argc, char *argv[])
 	//input.close();
 	//output.close();
 
-string a = "3.679309943091999999999999999999999940199340428386393492921053569003780360502364743524594814516603946685791015625";
+string a = "1";
+string b = "5";
 
-QFloat res;
-cout << res.BaseToBase(a, 10, 2) << endl;
+QFloat res1, res2;
+res1 = res1.fromDecToQFloat(a);
+res2 = res1.fromDecToQFloat(b);
+
+QFloat res = res1 + res2;
+
+cout << res.QFloatToDecStr() << endl;
 
 	system("pause");
 	system("cls");
