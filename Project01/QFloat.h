@@ -26,11 +26,15 @@ public:
 	// Nhóm hàm nhập
 	QFloat fromBinToQFloat(string str); // chuyển từ chuỗi nhị phân sang QFloat
 	QFloat fromDecToQFloat(string str); // chuyển từ chuỗi thập phân sang QFloat
-	
+	QFloat fromStringToQFloat(string str, unsigned short b); // chuyển chuỗi hệ cơ số b sang QFloat
+
 	// Nhóm hàm xuất
 	string QFloatToBinStr();
 	string QFloatToDecStr();
+	string QFloatToString(unsigned short b); // chuyển QFloat sang chuỗi ở hệ cơ số b
 
+	// chuyển đổi giữa các hệ cơ số
+	string BaseToBase(string str, unsigned short a, unsigned short b); // chuyển đổi chuỗi từ hệ cơ số a sang hệ cơ số b (2, 10)
 
 	//void StringBinToQFloat(string s); //Chuyen chuoi nhi phan sang Qfloat
 	//QFloat BinToDec(bool *bit); //Chuyen so QFloat nhi phan sang thap phan
@@ -59,6 +63,7 @@ public:
 	string IntToBin(string str); // chuyển số nguyên sang nhị phân
 	string BinToDec(string str); // chuyển số nhị phân sang thập phân
 	string FracDiv2(string str); // chia chuỗi nhị phân cho 2
+	void roundingFrac(string a, string& fracPartBit); // Làm tròn phần thập phân
 
 //	int GetSign() ; //Lay dau cua QFloat
 //	int SoSanhBit(bool bitX[], int lenX, bool bitY[], int lenY) ; //So sanh 2 day bit

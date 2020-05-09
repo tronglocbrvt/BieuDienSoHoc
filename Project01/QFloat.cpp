@@ -59,6 +59,7 @@ QFloat QFloat::fromDecToQFloat(string str)
 	string fracPartBit;
 	int exp = 0;
 	int count = 0;
+	bool checkRound = false; // biến check xem phần thập phân đã được 1.0 sau khi x2 liên tiếp hay chưa
 	
 	if (intPartBit != "") // phần nguyên khác 0 -> dạng chuẩn hóa được
 	{
@@ -69,7 +70,11 @@ QFloat QFloat::fromDecToQFloat(string str)
 			fracPart = plusStringFloat(fracPart, fracPart); // nhân 2 
 			fracPartBit += fracPart[0]; // lấy phần nguyên
 			fracPart[0] = '0'; // gán phần nguyên bằng 0
-			// Điều kiện dừng khi fracPart = 1 nhưng để đủ bit ta tiếp tục nhân -> thêm các bit 0
+			// Điều kiện dừng khi fracPart = 1.0 nhưng để đủ bit ta tiếp tục nhân -> thêm các bit 0
+			if (fracPart == "1") // đã tìm được vị trí xuất hiện 1.0
+			{
+				checkRound = true;
+			}
 		}
 	}
 
@@ -87,12 +92,17 @@ QFloat QFloat::fromDecToQFloat(string str)
 		}
 
 		exp = -(count + 1) + BIAS; // xác định số mũ 
-		if (count + 1 < BIAS) // số có thể chuẩn hóa -> thêm các bit 0
+		if (count + 1 < BIAS) // số có thể chuẩn hóa 
 		{
 			for (int i = 0; i < SIGNIFICAND; i++) {
 				fracPart = plusStringFloat(fracPart, fracPart); // nhân 2 
 				fracPartBit += fracPart[0]; // lấy phần nguyên
+
 				fracPart[0] = '0'; // gán phần nguyên bằng 0
+				if (fracPart == "1") // đã tìm được vị trí xuất hiện 1.0
+				{
+					checkRound = true;
+				}
 			}
 		}
 		else
@@ -103,9 +113,43 @@ QFloat QFloat::fromDecToQFloat(string str)
 				fracPartBit += fracPart[0]; // lấy phần nguyên
 				fracPart[0] = '0'; // gán phần nguyên bằng 0
 				exp++;
+				if (fracPart == "1") // đã tìm được vị trí xuất hiện 1.0
+				{
+					checkRound = true;
+				}
 			}
-	
+			
 		}
+	}
+
+	if (checkRound == false) // chưa tìm được vị trí xuất hiện 1.0 -> ta tiếp tục lấy tiếp 3 bit lưu vào string a;
+	{
+		string a;
+		for (int i = 0; i < 3; i++)
+		{
+			fracPart = plusStringFloat(fracPart, fracPart); // nhân 2 
+			a += fracPart[0]; // lấy phần nguyên
+			fracPart[0] = '0'; // gán phần nguyên bằng 0
+		}
+		roundingFrac(a, fracPartBit);
+	}
+
+	// làm tròn phần nguyên: khi thập phân toàn bit 1, ta cộng 1 vào exp và set lại phần thập phân là 0
+	// ví dụ: 10.1111 -> làm tròn: 11.0000
+	bool checkRoundInt = true; // kiểm tra có cần làm tròn phần Int hay không?
+	for (int i = 0; i < fracPartBit.size(); i++)
+	{
+		if (fracPartBit[i] == '0')
+		{
+			checkRoundInt = false; // có bit 0 ở phân thập phân -> không làm tròn
+			break;
+		}
+	}
+
+	if (checkRoundInt)
+	{
+		exp += exp;
+		fracPartBit = "0";
 	}
 
 	string resStr = intPartBit + fracPartBit;
@@ -130,6 +174,14 @@ QFloat QFloat::fromDecToQFloat(string str)
 		res.SetBit(MAX_LENGTH - 1 - i, resStr[i - 15 + count] - 48);
 	
 	return res;
+}
+
+QFloat QFloat::fromStringToQFloat(string str, unsigned short b)
+{
+	if (b == 2)
+		return fromBinToQFloat(str);
+	if (b == 10)
+		return fromDecToQFloat(str);
 }
 
 string QFloat::QFloatToBinStr()
@@ -159,7 +211,7 @@ string QFloat::QFloatToDecStr()
 	
 	// bước 1: xác định dấu, tách phần mũ và phần trị
 	string sign;
-	if (qfloat[0] == 1)
+	if (qfloat[0] == '1')
 		sign = '-';
 
 	string exponent = qfloat.substr(1, EXPONENT); // phần mũ
@@ -191,13 +243,13 @@ string QFloat::QFloatToDecStr()
 		// TH1: xét exp dương  ->  dời qua phải
 		if (exp > 0)
 		{
-			// VD: 1001.1 x 2^2, exp = 2 > 0 -> ta viết tương đương 1001.100
-			// dời lần 1: phần thập phân từ 10 -> 0, phần nguyên từ 1001 -> 10011  ->>> 10011.00 * 2^1
-			// dời lần 2: phần thập phân từ 0 -> 0, phần nguyên từ 10011 -> 100110  ->>> 100110.0 * 2^0
+			// VD: 1001.1 x 2^2, exp = 2 > 0
+			// dời lần 1: phần thập phân từ 1 -> hết, phần nguyên từ 1001 -> 10011  ->>> 10011 * 2^1
+			// dời lần 2: phần thập phân hết -> ta thêm 0 vào phần nguyên từ 10011 -> 100110  ->>> 100110 * 2^0
 			// --> mỗi lần dịch phần nguyên + thêm và phần thập phân xóa bớt
-			// ta thêm vào các bit 0 ở phần thập phân sao cho đủ exp
+			// nếu đã dịch hết phần thập phân -> ta thêm 0 vào phần nguyên
 			if (fracPart.size() > 0)													
-			{
+			{ 
 				intPart += fracPart[0];
 				fracPart.erase(fracPart.begin() + 0);
 			}
@@ -211,11 +263,11 @@ string QFloat::QFloatToDecStr()
 		// TH2: xét exp âm  ->  dời qua trái
 		else // exp < 0
 		{
-			// VD: 1.0011 x 2^-2, exp = 2 < 0 -> ta viết tương đương 001.0011
-			// dời lần 1: phần thập phân từ 0011 -> 10011, phần nguyên từ 01 -> 0  ->>> 00.10011 * 2^-1
-			// dời lần 2: phần thập phân từ 10011 -> 010011, phần nguyên từ 0 -> 0  ->>> 0.010011 * 2^0
+			// VD: 1.0011 x 2^-2, exp = 2 < 0 
+			// dời lần 1: phần thập phân từ 0011 -> 10011, phần nguyên từ 1 -> hết  ->>> 0.10011 * 2^-1
+			// dời lần 2: phần thập phân từ 10011 -> 010011 (ta thêm 0 vào trước vì phần nguyên hết)  ->>> 0.010011 * 2^0
 			// --> mỗi lần dịch phần nguyên xóa bớt và phần thập phân cộng thêm
-			// ta thêm vào các bit 0 ở trước phần nguyên sao cho đủ exp
+			// nếu đã dịch hết phần nguyên -> ta thêm 0 vào phần thập phân
 			if (intPart.size() > 0)													
 			{
 				fracPart = intPart[intPart.length() - 1] + fracPart;
@@ -247,6 +299,24 @@ string QFloat::QFloatToDecStr()
 	fracDec.erase(fracDec.begin() + 0);
 
 	return (sign + intDec + fracDec);
+}
+
+// chuyển QInt sang chuỗi ở hệ cơ số b
+string QFloat::QFloatToString(unsigned short b)
+{
+	if (b == 2)
+		return QFloatToBinStr();
+	if (b == 10)
+		return QFloatToDecStr();
+}
+
+string QFloat::BaseToBase(string str, unsigned short a, unsigned short b)
+{
+	QFloat q = fromStringToQFloat(str, a);
+
+	string res = q.QFloatToString(b);
+
+	return res;
 }
 
 ////chuyen chuoi nhi phan sang Qfloat
@@ -432,6 +502,29 @@ string QFloat::FracDiv2(string str)
 	res.insert(res.begin(), '0');
 
 	return res;
+}
+
+// hàm làm tròn phần thập phân
+// truyền vào 3 bit sau khi đủ 112 bit và chuỗi phần thập phân
+void QFloat::roundingFrac(string a, string& fracPartBit)
+{
+	if (a[0] == '1') // nếu bit đầu trong 3 bit = 1
+	{
+		if (!(a[1] == '0' && a[2] == '0' && fracPartBit[fracPartBit.size()-1] == '0'))
+		{
+			int trace = 1;
+			for (int i = fracPartBit.size() - 1; i >= 0; i--)
+			{
+				if (trace > 0)
+				{
+					int count = fracPartBit[i] - '0' + trace;
+					fracPartBit[i] = count % 2 + '0';
+					trace = count / 2;
+				}
+				else break;
+			}
+		}
+	}
 }
 
 ////Lay vi tri bit dau tien = 1 tu trai sang, neu khong co tra ve n
