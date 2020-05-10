@@ -538,10 +538,11 @@ bool QFloat::SignificandIsZero(string str, int intPart)
 }
 
 // cộng hai dãy bit
-string QFloat::addBitString(string str1, string str2, int& carry)
+string QFloat::addBitString(string str1, string str2, int& intPart, int intPartX, int intPartY)
 {
 	string s; 
 
+	int carry = 0;
 	for (int i = str1.size() - 1; i >= 0; i--) {
 		if (str1[i] == str2[i]) {
 			s.insert(s.begin(), carry + '0');
@@ -552,13 +553,23 @@ string QFloat::addBitString(string str1, string str2, int& carry)
 		}
 	}
 
+	intPart = intPartX + intPartY + carry;
+
 	return s;
 }
 
 // trừ 2 dãy bit
-string QFloat::subBitString(string str1, string str2, int & carry)
+string QFloat::subBitString(string str1, string str2, int& intPart, int intPartX, int intPartY)
 {
 	string s;
+
+	if (intPartX < intPartY) {
+		s = subBitString(str2, str1, intPart, intPartY, intPartX);
+		s.insert(s.begin(), '-');
+		return s;
+	}
+	
+	int carry = 0;
 	for (int i = str1.size() - 1; i >= 0; i--) {
 		if (str1[i] == str2[i]) {
 			s.insert(s.begin(), carry + '0');
@@ -568,30 +579,38 @@ string QFloat::subBitString(string str1, string str2, int & carry)
 			carry = str2[i] - '0';
 		}
 	}
+
+	if (intPartX - intPartY - carry < 0) {
+		s = subBitString(str2, str1, intPart, intPartY, intPartX);
+		s.insert(s.begin(), '-');
+		return s;
+	}
+
+	intPart = intPartX - intPartY - carry;
+
 	return s;
 }
 
-string QFloat::addSigned(string str1, string str2, QFloat x, QFloat y, int& carry)
+string QFloat::addSigned(string str1, string str2, QFloat x, QFloat y, int& intPart, int intPartX, int intPartY)
 {
 	string s;
 
 	if (x.GetBit(MAX_LENGTH - 1) == 1) {
 		if (y.GetBit(MAX_LENGTH - 1) == 1) 
 		{ // (-) + (-) = -((+) + (+))
-			s = addBitString(str1, str2, carry);
+			s = addBitString(str1, str2, intPart, intPartX, intPartY);
 			s = '-' + s;
 		}
 		else {					// (-) + (+) = (+) - (+)
-			s = subBitString(str1, str2, carry);
-			s = '-' + s;
+			s = subBitString(str2, str1, intPart, intPartY, intPartX);
 		}
 	}
 	else {
 		if (y.GetBit(MAX_LENGTH - 1) == 0) { // (+) + (+) = (+) + (+)
-			s = addBitString(str1, str2, carry);
+			s = addBitString(str1, str2, intPart, intPartX, intPartY);
 		}
 		else {					// (+) + (-) = (+) - (+)
-			s = subBitString(str1, str2, carry);
+			s = subBitString(str1, str2, intPart, intPartX, intPartY);
 		}
 	}
 
@@ -1083,10 +1102,10 @@ QFloat QFloat::operator+(const QFloat& plus)
 	// Nếu cả hai là số vô cực -> phép cộng nên trả về vô cực
 	if (x.CheckInf() && y.CheckInf())
 	{
-		if (x.GetBit(MAX_LENGTH - 1) == 1 && y.GetBit(MAX_LENGTH - 1) == 1) 
+		if (x.GetBit(MAX_LENGTH - 1) == 1 && y.GetBit(MAX_LENGTH - 1) == 1)
 			return QFloat("-Inf");
 
-		if (x.GetBit(MAX_LENGTH - 1) == 0 && y.GetBit(MAX_LENGTH - 1) == 0) 
+		if (x.GetBit(MAX_LENGTH - 1) == 0 && y.GetBit(MAX_LENGTH - 1) == 0)
 			return QFloat("Inf");
 
 		// TH có một số là âm vô cực, một số là dương vô cực
@@ -1097,14 +1116,14 @@ QFloat QFloat::operator+(const QFloat& plus)
 	if ((x.CheckInf() && x.GetBit(MAX_LENGTH - 1) == 1) || (y.CheckInf() && y.GetBit(MAX_LENGTH - 1) == 1))
 		return QFloat("-Inf");
 
-	if ((x.CheckInf() && x.GetBit(MAX_LENGTH - 1) == 0) || (y.CheckInf() && y.GetBit(MAX_LENGTH - 1) == 0)) 
+	if ((x.CheckInf() && x.GetBit(MAX_LENGTH - 1) == 0) || (y.CheckInf() && y.GetBit(MAX_LENGTH - 1) == 0))
 		return QFloat("Inf");
 
 	// Nếu 1 trong 2 số là 0, trả về số còn lại
 	if (x.CheckZero())
 		return y;
 
-	if (y.CheckZero()) 
+	if (y.CheckZero())
 		return x;
 
 	// nếu không rơi vào các TH đặc biệt ở trên
@@ -1121,8 +1140,8 @@ QFloat QFloat::operator+(const QFloat& plus)
 	int eY = stoi(expY, nullptr, 2);
 
 	// lấy phần trị
-	string signfinicandX = X.substr(EXPONENT + 1, MAX_LENGTH - 1);
-	string signfinicandY = Y.substr(EXPONENT + 1, MAX_LENGTH - 1);
+	string significandX = X.substr(EXPONENT + 1, MAX_LENGTH - 1);
+	string significandY = Y.substr(EXPONENT + 1, MAX_LENGTH - 1);
 
 	// lấy phần nguyên: dạng chuẩn -> intPart = 1; dạng không chuẩn intPart = 0
 	int intPartX = (x.CheckDenormalized()) ? 0 : 1;
@@ -1137,76 +1156,107 @@ QFloat QFloat::operator+(const QFloat& plus)
 		// dịch phải số có phần mũ nhỏ hơn (ta đã có bước hoán vị ở trên nên y là số có mũ nhỏ hơn)
 		int d = eX - eY; // tính độ chênh lệch số mũ
 		// Thêm bit vào eY để cân bằng số mũ
-		while (eX > eY) 
+		while (eX > eY)
 		{
-			signfinicandY.insert(signfinicandY.begin(), '0'); // thêm vào đầu phần trị
-			signfinicandY.pop_back();
+			significandY.insert(significandY.begin(), '0'); // thêm vào đầu phần trị
+			significandY.pop_back();
 			eY++; // tăng số mũ
 		}
-	
-		if (d > 0 && d <= signfinicandY.size())
+
+		if (d > 0 && d <= significandY.size())
 		{
-			signfinicandY[d - 1] = intPartY + '0';
+			significandY[d - 1] = intPartY + '0';
 			intPartY = 0;
 		}
+		else
+			intPartY = 0;
 
-		if (SignificandIsZero(signfinicandY, intPartY))
+		if (SignificandIsZero(significandY, intPartY))
 			return x;
 	}
 
 	// eX = eY
 
-	//Luu kết quả phần trị vào z
+	//Luu kết quả: e là phần mũ, sign là dấu, intPart là phần nguyên, significand là phần trị
 	int e = eX; // mũ của kết quả
-	int intPart; // phần nguyên của kết quả
-	string signfinicand; // phần trị của kết qả 
+	int intPart = 0; // phần nguyên của kết quả
+	string significand; // phần trị của kết qả 
 	string sign; // dấu của kết quả
 
 	int carry = 0;
-	signfinicand = addSigned(signfinicandX, signfinicandY, x, y, carry);
-	intPart = intPartX + intPartY + carry;
+	significand = addSigned(significandX, significandY, x, y, intPart, intPartX, intPartY);
 
-	if (SignificandIsZero(signfinicand, intPart))
+	if (significand[0] == '-') // kiểm tra số âm
+	{
+		sign = "-";
+		significand.erase(significand.begin() + 0);
+	}
+
+	if (SignificandIsZero(significand, intPart))
 	{
 		return QFloat();
 	}
 
-	if (signfinicand[0] == '-') // kiểm tra số âm
-	{
-		sign = "-";
-		signfinicand.erase(signfinicand.begin() + 0);
-	}
+	//// Trường hợp cùng dấu số không chuẩn nhưng carry = 1 -> TH không chuẩn + không chuẩn = chuẩn (Carry = 1)
+	//if ((X[0] == '0' && Y[0] == '0') || (X[0] == '1' && Y[0] == '1'))
+	//	if (intPartX == 0 && intPartY == 0 && carry) // shift right
+	//	{
+	//		intPart = 1; // cập nhật lại phần nguyên của kết quả
+	//		e++;
+	//	}
 
-	if (intPart > 1) // tràn -> shift right
+	//// Trường hợp không chuẩn khác dấu nhưng carry = 1 -> thực hiện bù 2
+	//if ((X[0] == '0' && Y[0] == '1') || (X[0] == '1' && Y[0] == '0'))
+	//	if (intPartX == 0 && intPartY == 0 && carry) // shift right
+	//	{
+	//		int i;
+	//		// Đảo tất cả các bit
+	//		for (i = 0; i < significand.size(); i++)
+	//			significand[i] = (significand[i] == '0' ? '1' : '0');
+	//		// Thêm 1
+	//		for (i = significand.size() - 1; i >= 0; i--)
+	//			if (significand[i] == '0') {
+	//				significand[i] = '1';
+	//				for (int j = i + 1; j < significand.size(); j++)
+	//					significand[j] = '0';
+	//				break;
+	//			}
+	//	}
+
+	if (intPart > 1) // tràn -> shift right, chỉ có TH phép cộng intPart mới có thể > 1
 	{
-		signfinicand.insert(signfinicand.begin(), (intPart % 2)  + '0'); // thêm vào đầu phần trị
-		signfinicand.pop_back();
+		significand.insert(significand.begin(), (intPart % 2) + '0'); // thêm vào đầu phần trị
+		significand.pop_back();
 		intPart /= 2; // cập nhật lại phần nguyên của kết quả
 		e++; // tăng số mũ
 
 		if ((e - BIAS) >= BIAS + 1) // exponent overflow
 		{
+			if (sign == "-")
+				return QFloat("-Inf");
 			return QFloat("Inf");
 		}
 	}
 
-	else
+	while (intPart == 0) // số không chuẩn -> shift left
 	{
-		while (intPart == 0) // số không chuẩn -> shift left
-		{
-			intPart = signfinicand[0];
-			signfinicand.erase(signfinicand.begin());
-			signfinicand.push_back('0');
-			e--;
-		}
+		intPart = significand[0];
+		significand.erase(significand.begin());
+		significand.push_back('0');
+		e--;
 
-		if ((e - BIAS) <= -BIAS) // exponent underflow
+		if (e < -BIAS - 1) // exponent underflow
 		{
-			return QFloat("-Inf");
+			if (sign == "-")
+				return QFloat("-Inf");
+			return QFloat("Inf");
 		}
 	}
-	
+
 	// đổi exp sang nhị phân 
+	if (e < 0) // e là GIÁ TRỊ phần mũ được biểu diễn ở hệ 10 từ dãy bit nhị phân -> dương (vì đã xét TH mũ toàn bit 1)
+		e = 0;
+
 	string exponent = IntToBin(to_string(e));
 	int lengthExp = exponent.length();
 	if (lengthExp < EXPONENT) // đảm bảo exponent luôn 15 bit
@@ -1221,7 +1271,7 @@ QFloat QFloat::operator+(const QFloat& plus)
 
 	if (sign == "-")
 		res.SetBit(MAX_LENGTH - 1, 1);
-	else 
+	else
 		res.SetBit(MAX_LENGTH - 1, 0);
 	// Đặt phần mũ
 	for (int i = 1; i <= EXPONENT; i++)
@@ -1229,22 +1279,24 @@ QFloat QFloat::operator+(const QFloat& plus)
 
 	// Đặt phần trị
 	for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
-		res.SetBit(MAX_LENGTH - 1 - i, signfinicand[i - EXPONENT - 1] - 48);
+		res.SetBit(MAX_LENGTH - 1 - i, significand[i - EXPONENT - 1] - 48);
 
 	return res;
 }
 
-////Toan tu -
-//QFloat QFloat::operator -( QFloat &minus)
-//{
-//	//Phep tru la phep cong voi so am
-//	QFloat ans = minus;
-//	ans.SaveSign(1 - ans.GetSign());
-//	return (*this + ans);
-//}
-//
+//Toan tu -
+QFloat QFloat::operator- (const QFloat &minus)
+{
+	//Phép trừ là phép cộng với số đối của nó
+	QFloat oppMinus = minus;
+	
+	oppMinus.SetBit(MAX_LENGTH - 1, !(oppMinus.GetBit(MAX_LENGTH - 1))); // đổi dấu số trừ
+
+	return (*this + oppMinus);
+}
+
 ////Toan tu *
-//QFloat QFloat::operator *( QFloat &multiply)
+//QFloat QFloat::operator* (const QFloat &multiply)
 //{
 //	//So nhan = 0 hoac so bi nhan = 0
 //	if (this->CheckZero() || multiply.CheckZero())
@@ -1311,7 +1363,7 @@ QFloat QFloat::operator+(const QFloat& plus)
 //	delete[] bit;
 //	return (Z);
 //}
-//
+
 ////Toan tu /
 //QFloat QFloat::operator/( QFloat &divide)
 //{

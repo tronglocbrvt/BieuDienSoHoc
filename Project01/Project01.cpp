@@ -248,20 +248,19 @@ int main(int argc, char *argv[])
 	//input.close();
 	//output.close();
 
-string a = "1";
-string b = "5";
+string a = "01111111111111100000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
+string b = "01111111111111101111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
 
 QFloat res1, res2;
-res1 = res1.fromDecToQFloat(a);
-res2 = res1.fromDecToQFloat(b);
+res1 = res1.fromBinToQFloat(a);
+res2 = res1.fromBinToQFloat(b);
 
-QFloat res = res1 + res2;
+QFloat res = res1 - res2;
 
-cout << res.QFloatToDecStr() << endl;
+cout << res.QFloatToBinStr() << endl;
 
 	system("pause");
 	system("cls");
-
 	return 0;
 }
 
