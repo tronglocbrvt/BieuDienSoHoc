@@ -24,7 +24,7 @@ public:
 	
 	// Hàm nhập từ chuỗi
 	QInt fromDecToQInt(string str); // chuyển chuỗi thập phân sang QInt
-	QInt fromBinToQInt(string str); // chuyển chuỗi nhị phân sang QInt
+	static QInt fromBinToQInt(string str); // chuyển chuỗi nhị phân sang QInt
 	QInt fromHexToQInt(string str); // chuyển chuỗi thập lục phân sang QInt
 	QInt fromStringToQInt(string str, unsigned short b); // chuyển chuỗi hệ cơ số b sang QInt
 

@@ -60,15 +60,14 @@ public:
 	// ====================================== GET, SET BIT VÀ CÁC HÀM HỖ TRỢ ======================================
 	void SetBit(int i, int bit); //Set bit tại vị trí i
 	int GetBit(int i) ; //Lấy bit ở vị trí i
+	int exponentValue(); // lấy giá trị phần mũ
 	string plusStringFloat(string str1, string str2); // cộng chuỗi thập phân
 	string IntToBin(string str); // chuyển số nguyên sang nhị phân
 	string BinToDec(string str); // chuyển số nhị phân sang thập phân
 	string FracDiv2(string str); // chia chuỗi nhị phân cho 2
 	void roundingFrac(string a, string& fracPartBit); // Làm tròn các bit phần thập phân (làm tròn bit)
 	bool SignificandIsZero(string str, int intPart); // kiểm tra phần trị có bằng 0 hay không
-	string addBitString(string str1, string str2, int& intPart, int intPartX, int intPartY); // cộng 2 dãy bit
-	string subBitString(string str1, string str2, int& intPart, int intPartX, int intPartY); // trừ 2 dãy bit
-	string addSigned(string str1, string str2, QFloat x, QFloat y, int& intPart, int intPartX, int intPartY);
+	QInt addSigned(QInt x, QInt y, bool& sign, bool xSign, bool ySign); // cộng có dấu 2 số QInt
 
 //	int GetSign() ; //Lay dau cua QFloat
 //	int SoSanhBit(bool bitX[], int lenX, bool bitY[], int lenY) ; //So sanh 2 day bit

@@ -385,6 +385,22 @@ int QFloat::GetBit(int i)
 	return ((data[block] & (1 << pos)) ? 1 : 0);
 }
 
+// tính giá trị phần mũ
+int QFloat::exponentValue()
+{
+	int e = 0;
+
+	if (CheckDenormalized())
+		return 1 - BIAS; // -16382
+
+	for (int i = EXPONENT; i >= 1; i--) 
+	{
+		e += GetBit(MAX_LENGTH - i - 1) * (1 << (15 - i));
+	}
+
+	return e - BIAS;
+}
+
 string QFloat::IntToBin(string str)
 {
 	string res;
@@ -537,99 +553,38 @@ bool QFloat::SignificandIsZero(string str, int intPart)
 	return intPart == 0;
 }
 
-// cộng hai dãy bit
-string QFloat::addBitString(string str1, string str2, int& intPart, int intPartX, int intPartY)
+QInt QFloat::addSigned(QInt x, QInt y, bool& sign, bool xSign, bool ySign)
 {
-	string s; 
+	int cal = 0;
 
-	int carry = 0;
-	for (int i = str1.size() - 1; i >= 0; i--) {
-		if (str1[i] == str2[i]) {
-			s.insert(s.begin(), carry + '0');
-			carry = str1[i] - '0';
+	if (xSign != ySign)
+		cal = 1;
+
+	QInt res;
+
+	if (cal) 
+	{
+		if (x < y) 
+		{
+			res = y - x;
+			sign = ySign;
 		}
-		else {
-			s.insert(s.begin(), !carry + '0');
+		else 
+		{
+			res = x - y;
+			sign = xSign;
 		}
 	}
+	else 
+	{
+		res = x + y;
+		sign = xSign;
+	}
 
-	intPart = intPartX + intPartY + carry;
-
-	return s;
+	return res;
 }
 
-// trừ 2 dãy bit
-string QFloat::subBitString(string str1, string str2, int& intPart, int intPartX, int intPartY)
-{
-	string s;
 
-	if (intPartX < intPartY) {
-		s = subBitString(str2, str1, intPart, intPartY, intPartX);
-		s.insert(s.begin(), '-');
-		return s;
-	}
-	
-	int carry = 0;
-	for (int i = str1.size() - 1; i >= 0; i--) {
-		if (str1[i] == str2[i]) {
-			s.insert(s.begin(), carry + '0');
-		}
-		else {
-			s.insert(s.begin(), !carry + '0');
-			carry = str2[i] - '0';
-		}
-	}
-
-	if (intPartX - intPartY - carry < 0) {
-		s = subBitString(str2, str1, intPart, intPartY, intPartX);
-		s.insert(s.begin(), '-');
-		return s;
-	}
-
-	intPart = intPartX - intPartY - carry;
-
-	return s;
-}
-
-string QFloat::addSigned(string str1, string str2, QFloat x, QFloat y, int& intPart, int intPartX, int intPartY)
-{
-	string s;
-
-	if (x.GetBit(MAX_LENGTH - 1) == 1) {
-		if (y.GetBit(MAX_LENGTH - 1) == 1) 
-		{ // (-) + (-) = -((+) + (+))
-			s = addBitString(str1, str2, intPart, intPartX, intPartY);
-			s = '-' + s;
-		}
-		else {					// (-) + (+) = (+) - (+)
-			s = subBitString(str2, str1, intPart, intPartY, intPartX);
-		}
-	}
-	else {
-		if (y.GetBit(MAX_LENGTH - 1) == 0) { // (+) + (+) = (+) + (+)
-			s = addBitString(str1, str2, intPart, intPartX, intPartY);
-		}
-		else {					// (+) + (-) = (+) - (+)
-			s = subBitString(str1, str2, intPart, intPartX, intPartY);
-		}
-	}
-
-	return s;
-}
-
-////Lay vi tri bit dau tien = 1 tu trai sang, neu khong co tra ve n
-//int QFloat::GetFirstBit1(bool bit[], int n)
-//{
-//	for (int i = 0; i < n; i++)
-//	{
-//		if (bit[i] == 1)
-//		{
-//			return i;
-//		}
-//	}
-//	return n;
-//}
-//
 ////So sanh 2 day bit
 //int QFloat::SoSanhBit(bool bitX[], int lenX, bool bitY[], int lenY)
 //{
@@ -1127,25 +1082,24 @@ QFloat QFloat::operator+(const QFloat& plus)
 		return x;
 
 	// nếu không rơi vào các TH đặc biệt ở trên
-	// chuyển về dạng chuỗi để dễ tính toán
-	string X = x.QFloatToBinStr();
-	string Y = y.QFloatToBinStr();
-
-	// lấy chuỗi nhị phân phần mũ
-	string expX = X.substr(1, EXPONENT);
-	string expY = Y.substr(1, EXPONENT);
-
 	// Tính phần mũ
-	int eX = stoi(expX, nullptr, 2);
-	int eY = stoi(expY, nullptr, 2);
+	int eX = x.exponentValue();
+	int eY = y.exponentValue();
 
-	// lấy phần trị
-	string significandX = X.substr(EXPONENT + 1, MAX_LENGTH - 1);
-	string significandY = Y.substr(EXPONENT + 1, MAX_LENGTH - 1);
+	// lấy phần trị lưu vào QInt
+	QInt qX, qY;
 
-	// lấy phần nguyên: dạng chuẩn -> intPart = 1; dạng không chuẩn intPart = 0
-	int intPartX = (x.CheckDenormalized()) ? 0 : 1;
-	int intPartY = (y.CheckDenormalized()) ? 0 : 1;
+	if (x.CheckDenormalized() == false)  // thêm phần nguyên vào QInt, số chuẩn phần nguyên là 1, không chuẩn mặc định là 0
+		qX.SetBit(SIGNIFICAND, 1);
+	
+	if (y.CheckDenormalized() == false) // thêm phần nguyên vào QInt, số chuẩn phần nguyên là 1, không chuẩn mặc định là 0 
+		qY.SetBit(SIGNIFICAND, 1);
+	
+	for (int i = SIGNIFICAND - 1; i >= 0; i--) // set bit vào QInt
+	{
+		qX.SetBit(i, x.GetBit(i));
+		qY.SetBit(i, y.GetBit(i));
+	}
 
 	// kiểm tra phần mũ có bằng nhau hay không
 	if (eX != eY) // 2 mũ không bằng nhau
@@ -1154,134 +1108,83 @@ QFloat QFloat::operator+(const QFloat& plus)
 			return (y + x);
 
 		// dịch phải số có phần mũ nhỏ hơn (ta đã có bước hoán vị ở trên nên y là số có mũ nhỏ hơn)
-		int d = eX - eY; // tính độ chênh lệch số mũ
 		// Thêm bit vào eY để cân bằng số mũ
 		while (eX > eY)
 		{
-			significandY.insert(significandY.begin(), '0'); // thêm vào đầu phần trị
-			significandY.pop_back();
+			qY = qY >> 1; // dịch phải
 			eY++; // tăng số mũ
 		}
 
-		if (d > 0 && d <= significandY.size())
-		{
-			significandY[d - 1] = intPartY + '0';
-			intPartY = 0;
-		}
-		else
-			intPartY = 0;
-
-		if (SignificandIsZero(significandY, intPartY))
+		if (qY.isZero())
 			return x;
 	}
 
 	// eX = eY
-
-	//Luu kết quả: e là phần mũ, sign là dấu, intPart là phần nguyên, significand là phần trị
 	int e = eX; // mũ của kết quả
-	int intPart = 0; // phần nguyên của kết quả
-	string significand; // phần trị của kết qả 
-	string sign; // dấu của kết quả
+	bool sign; // dấu kết quả
+	QFloat result; // kết quả cuối cùng
 
-	int carry = 0;
-	significand = addSigned(significandX, significandY, x, y, intPart, intPartX, intPartY);
+	bool xSign = x.GetBit(MAX_LENGTH - 1); // dấu x
+	bool ySign = y.GetBit(MAX_LENGTH - 1); // dấu y
 
-	if (significand[0] == '-') // kiểm tra số âm
-	{
-		sign = "-";
-		significand.erase(significand.begin() + 0);
-	}
+	QInt res = addSigned(qX, qY, sign, xSign, ySign);
 
-	if (SignificandIsZero(significand, intPart))
+	// Trường hợp số không chuẩn nhưng phần nguyên bằng = 1 -> tăng exp lên 1
+	if (res.GetBit(SIGNIFICAND) && x.CheckDenormalized() && y.CheckDenormalized())
+		e++;
+
+	if (res.isZero())
 	{
 		return QFloat();
 	}
 
-	//// Trường hợp cùng dấu số không chuẩn nhưng carry = 1 -> TH không chuẩn + không chuẩn = chuẩn (Carry = 1)
-	//if ((X[0] == '0' && Y[0] == '0') || (X[0] == '1' && Y[0] == '1'))
-	//	if (intPartX == 0 && intPartY == 0 && carry) // shift right
-	//	{
-	//		intPart = 1; // cập nhật lại phần nguyên của kết quả
-	//		e++;
-	//	}
-
-	//// Trường hợp không chuẩn khác dấu nhưng carry = 1 -> thực hiện bù 2
-	//if ((X[0] == '0' && Y[0] == '1') || (X[0] == '1' && Y[0] == '0'))
-	//	if (intPartX == 0 && intPartY == 0 && carry) // shift right
-	//	{
-	//		int i;
-	//		// Đảo tất cả các bit
-	//		for (i = 0; i < significand.size(); i++)
-	//			significand[i] = (significand[i] == '0' ? '1' : '0');
-	//		// Thêm 1
-	//		for (i = significand.size() - 1; i >= 0; i--)
-	//			if (significand[i] == '0') {
-	//				significand[i] = '1';
-	//				for (int j = i + 1; j < significand.size(); j++)
-	//					significand[j] = '0';
-	//				break;
-	//			}
-	//	}
-
-	if (intPart > 1) // tràn -> shift right, chỉ có TH phép cộng intPart mới có thể > 1
+	if (res.GetBit(SIGNIFICAND + 1) == 1) // tràn -> shift right
 	{
-		significand.insert(significand.begin(), (intPart % 2) + '0'); // thêm vào đầu phần trị
-		significand.pop_back();
-		intPart /= 2; // cập nhật lại phần nguyên của kết quả
+		res = res >> 1;
 		e++; // tăng số mũ
 
-		if ((e - BIAS) >= BIAS + 1) // exponent overflow
+		if (e > BIAS) // exponent overflow
 		{
-			if (sign == "-")
+			if (sign)
 				return QFloat("-Inf");
 			return QFloat("Inf");
 		}
 	}
 
-	while (intPart == 0) // số không chuẩn -> shift left
+	while (res.GetBit(SIGNIFICAND) == 0 && e != (1-BIAS)) // số không chuẩn -> shift left
 	{
-		intPart = significand[0];
-		significand.erase(significand.begin());
-		significand.push_back('0');
-		e--;
-
-		if (e < -BIAS - 1) // exponent underflow
+		res = res << 1; // dịch trái
+		e--; // giảm số mũ
+		if (e < 1 - BIAS) // exponent underflow
 		{
-			if (sign == "-")
+			if (sign)
 				return QFloat("-Inf");
 			return QFloat("Inf");
 		}
 	}
 
 	// đổi exp sang nhị phân 
-	if (e < 0) // e là GIÁ TRỊ phần mũ được biểu diễn ở hệ 10 từ dãy bit nhị phân -> dương (vì đã xét TH mũ toàn bit 1)
+	if (e == 1 - BIAS) // số không chuẩn
 		e = 0;
+	else
+		e += BIAS;
 
-	string exponent = IntToBin(to_string(e));
-	int lengthExp = exponent.length();
-	if (lengthExp < EXPONENT) // đảm bảo exponent luôn 15 bit
+	if (sign) // nếu là âm
 	{
-		for (int i = 0; i < EXPONENT - lengthExp; i++)
-			exponent = '0' + exponent;
+		result.SetBit(MAX_LENGTH - 1, 1);
 	}
 
-	QFloat res;
+	QInt exponent(e);
 
-	// Đặt phần dấu
-
-	if (sign == "-")
-		res.SetBit(MAX_LENGTH - 1, 1);
-	else
-		res.SetBit(MAX_LENGTH - 1, 0);
 	// Đặt phần mũ
 	for (int i = 1; i <= EXPONENT; i++)
-		res.SetBit(MAX_LENGTH - 1 - i, exponent[i - 1] - 48);
+		result.SetBit(MAX_LENGTH - 1 - i, exponent.GetBit(EXPONENT - i));
 
 	// Đặt phần trị
 	for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
-		res.SetBit(MAX_LENGTH - 1 - i, significand[i - EXPONENT - 1] - 48);
+		result.SetBit(MAX_LENGTH - 1 - i, res.GetBit(MAX_LENGTH - 1 - i));
 
-	return res;
+	return result;
 }
 
 //Toan tu -
