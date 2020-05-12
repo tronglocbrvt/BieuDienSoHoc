@@ -235,8 +235,9 @@ QInt QInt::toTwoCompliment(QInt q)
 // ============================ TOÁN TỬ CỘNG, TRỪ, NHÂN, CHIA, LẤY DƯ ============================
 
 // Toán tử cộng
-QInt QInt::operator+(QInt q)
+QInt QInt::operator+(const QInt& plus)
 {
+	QInt q = plus;
 	QInt res; // lưu kết quả
 	unsigned short carry = 0; // nhớ
 	
@@ -251,8 +252,9 @@ QInt QInt::operator+(QInt q)
 }
 
 // toán tử trừ
-QInt QInt::operator-(QInt q) // ta chuyển thành cộng a - b = a + (-b)
+QInt QInt::operator-(const QInt& minus) // ta chuyển thành cộng a - b = a + (-b)
 {
+	QInt q = minus;
 	QInt res; // lưu kết quả
 	unsigned short carry = 0; // nhớ
 	q = toTwoCompliment(q); // chuyển q sang dạng bù 2
@@ -264,9 +266,10 @@ QInt QInt::operator-(QInt q) // ta chuyển thành cộng a - b = a + (-b)
 }
 
 // toán tử nhân theo thuật toán Booth
-QInt QInt::operator*(QInt M)
+QInt QInt::operator*(const QInt& multiply)
 {
 	QInt Q = *this; // số nhân
+	QInt M = multiply;
 	QInt A;
 	unsigned short tmp = 0;
 
@@ -290,9 +293,10 @@ QInt QInt::operator*(QInt M)
 }
 
 // toán tử chia
-QInt QInt::operator/(QInt M)
+QInt QInt::operator/(const QInt& divide)
 {
 	QInt Q = *this; // số chia
+	QInt M = divide;
 	QInt A;
 	bool sign = false; // kiểm tra M và Q có trái dấu hay không
 
@@ -348,9 +352,10 @@ QInt QInt::operator/(QInt M)
 }
 
 // Toán tử lấy dư
-QInt QInt::operator%(QInt M)
+QInt QInt::operator%(const QInt& divide)
 {
 	QInt Q = *this; // số chia
+	QInt M = divide;
 	QInt A;
 	bool sign = false; // biến sign dấu của số dư
 
@@ -408,8 +413,9 @@ QInt QInt::operator%(QInt M)
 // ============================ TOÁN TỬ SO SÁNH & GÁN ============================
 
 // toán tử so sánh >
-bool QInt::operator>(QInt q) // so sánh this với q
+bool QInt::operator>(const QInt& other) // so sánh this với q
 {
+	QInt q = other;
 	// trường hợp khác dấu
 	if (GetBit(NUM_BIT - 1) > q.GetBit(NUM_BIT - 1))
 		return false; // this < q và bit 1 biểu thị số âm
@@ -429,28 +435,33 @@ bool QInt::operator>(QInt q) // so sánh this với q
 	return false; // trường hợp bằng
 }
 
-bool QInt::operator<(QInt q)
+bool QInt::operator<(const QInt& other)
 {
+	QInt q = other;
 	return !(*this == q) && !(*this > q);
 }
 
-bool QInt::operator<=(QInt q)
+bool QInt::operator<=(const QInt& other)
 {
+	QInt q = other;
 	return !(*this > q);
 }
 
-bool QInt::operator>=(QInt q)
+bool QInt::operator>=(const QInt& other)
 {
+	QInt q = other;
 	return !(*this < q);
 }
 
-bool QInt::operator!=(QInt q)
+bool QInt::operator!=(const QInt& other)
 {
+	QInt q = other;
 	return !(*this == q);
 }
 
-bool QInt::operator==(QInt q)
+bool QInt::operator==(const QInt& other)
 {
+	QInt q = other;
 	for (int i = NUM_BIT - 1; i >= 0; i--)
 	{
 		if (GetBit(i) != q.GetBit(i))

@@ -42,20 +42,20 @@ public:
 	// ============================ TOÁN TỬ ============================
 	
 	// Toán tử + - * / %
-	QInt operator+(QInt q);
-	QInt operator-(QInt q);
-	QInt operator*(QInt M);
-	QInt operator/(QInt M);
-	QInt operator%(QInt M); // phép lấy dư
+	QInt operator+(const QInt& plus);
+	QInt operator-(const QInt& minus);
+	QInt operator*(const QInt& multiply);
+	QInt operator/(const QInt& divide);
+	QInt operator%(const QInt& divide); // phép lấy dư
 
 	// Toán tử so sánh và gán
-	bool operator>(QInt q);
-	bool operator<(QInt q);
-	bool operator<=(QInt q);
-	bool operator>=(QInt q); 
-	bool operator!=(QInt q);
-	bool operator==(QInt q);
-	QInt& operator=(const QInt& q);
+	bool operator>(const QInt& other);
+	bool operator<(const QInt& other);
+	bool operator<=(const QInt& other);
+	bool operator>=(const QInt& other); 
+	bool operator!=(const QInt& other);
+	bool operator==(const QInt& other);
+	QInt& operator=(const QInt& other);
 
 	// Toán tử NOT AND OR XOR
 	QInt& operator~();

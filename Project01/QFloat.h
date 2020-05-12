@@ -3,7 +3,6 @@
 #define MAX_LENGTH 128 //kich thuoc toi da cua chuoi bit
 #define EXPONENT 15 //kich thuoc phan so mu
 #define SIGNIFICAND 112 //kich thuoc phan dinh tri
-#define SIGN 1 //kich thuoc phan dau
 #define BIAS 16383 //gia tri cua so bias
 
 #include <iostream>
@@ -21,7 +20,7 @@ private:
 
 public:
 
-	// ====================================== NHÓM HÀM KIỂM TRA ======================================
+	// ====================================== NHÓM HÀM CHUYỂN ĐỔI ======================================
 
 	// Nhóm hàm nhập
 	QFloat fromBinToQFloat(string str); // chuyển từ chuỗi nhị phân sang QFloat
@@ -36,16 +35,16 @@ public:
 	// chuyển đổi giữa các hệ cơ số
 	string BaseToBase(string str, unsigned short a, unsigned short b); // chuyển đổi chuỗi từ hệ cơ số a sang hệ cơ số b (2, 10)
 
-	//void StringBinToQFloat(string s); //Chuyen chuoi nhi phan sang Qfloat
-	//QFloat BinToDec(bool *bit); //Chuyen so QFloat nhi phan sang thap phan
-	//bool* DecToBin(QFloat x); //Chuyen so QFloat thap phan sang nhi phan
+	// ====================================== TOÁN TỬ ======================================
 
 	QFloat operator+ (const QFloat& plus); //Toan tu +
 	QFloat operator- (const QFloat& minus); //Toan tu -
-	//QFloat operator* (const QFloat& multiply); //Toan tu *
-	//QFloat operator /( QFloat &divide); //Toan tu /
+	QFloat operator* (const QFloat& multiply); //Toan tu *
+	QFloat operator/ (const QFloat &divide); //Toan tu /
 
 	QFloat& operator=(const QFloat& q); //Toán tử gán = 
+
+	// ====================================== NHÓM HÀM KHỞi TẠO VÀ HỦY ======================================
 
 	QFloat();
 	QFloat(string str);
@@ -68,30 +67,13 @@ public:
 	void roundingFrac(string a, string& fracPartBit); // Làm tròn các bit phần thập phân (làm tròn bit)
 	bool SignificandIsZero(string str, int intPart); // kiểm tra phần trị có bằng 0 hay không
 	QInt addSigned(QInt x, QInt y, bool& sign, bool xSign, bool ySign); // cộng có dấu 2 số QInt
-
-//	int GetSign() ; //Lay dau cua QFloat
-//	int SoSanhBit(bool bitX[], int lenX, bool bitY[], int lenY) ; //So sanh 2 day bit
-//	int TruBit(bool bitX[], int lenX, bool bitY[], int lenY, bool bitZ[], int lenZ) ; //Tru bit: X - Y = Z
-//	void SaveSign(int dau) ; //Luu dau cua QFloat
-//	int CalExponent() ; //Tinh gia tri phan mu
-//	void SaveExponent(int exponent) ; //Luu phan mu
-//	void SaveSignificand(bool BitTri[]); //Luu phan tri
-//	
-//	int GetIntPart() ; //Lay gia tri phan nguyen cua QFloat
-//	void ShiftRSignificand(int numBit, int &intPart) ; //Shift Right cac bit phan tri
-//	void ShiftLSignificand(int numBit, int &intPart) ; //Shift Left cac bit phan tri
-//	bool CheckSignificandZero(int intPart); //Kiem tra tat ca cac bit cua phan tri co = 0 hay khong
-//	void ChuyenPhanTriThanhBit(bool bit[]) ; //Lay phan tri va chuyen thanh day bit
-//	void CongPhanTriDuong(QFloat X, int intX, QFloat Y, int intY, QFloat &Z, int &intZ) ; //Cong hai phan tri duong X + Y = Z
-//	void TruPhanTriDuong(QFloat X, int intX, QFloat Y, int intY, QFloat &Z, int &intZ) ; //Tru hai phan tri duong X - Y = Z
-//	void CongPhanTriCoDau(QFloat X, int intX, QFloat Y, int intY, QFloat &Z, int &intZ) ; //Cong hai phan tri co dau X + Y = Z
-//	void NhanPhanTri(QFloat X, QFloat Y, bool bit[], int n) ; //Nhan hai phan tri X * Y = bit (luu vao bit)
-//	int LamTronNhiPhan(bool bit[]); //Lam tron so nhi phan (0.5->1, 1.5->2)
-//	int GetFirstBit1(bool bit[], int n) ; //Lay vi tri bit dau tien = 1 tu trai sang, neu khong co tra ve n
-//
-//public:
-//	QFloat GetZero(); //Lay so 0
-//	QFloat GetInf(); //Lay so vo cung
-//	QFloat GetNaN(); //Lay so NaN
 };
+
+int countSignificantNumber(string& n);
+string BinaryAddition(const string& a, const string& b);
+string BinarySubSubtraction(const string& a, const string& b);
+string multiplyBinary(string& a, string& b);
+bool isStringZero(const string& s);
+bool isStringBigger(const string& s1, const string& s2); // a > b, length equal
+string divideBinary(string& a, string& b, int& decimalPoint);
 

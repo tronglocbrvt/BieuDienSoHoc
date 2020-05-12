@@ -1,8 +1,8 @@
 ﻿#include "QFloat.h"
 
-//--------------------------------------------------------------
-//NHOM HAM CHUYEN DOI
+// ====================================== NHÓM HÀM CHUYỂN ĐỔI ======================================
 
+// chuyển từ chuỗi nhị phân sang QFloat
 QFloat QFloat::fromBinToQFloat(string str)
 {
 	QFloat res;
@@ -17,6 +17,7 @@ QFloat QFloat::fromBinToQFloat(string str)
 	return res;
 }
 
+// chuyển từ chuỗi thập phân sang QFloat
 QFloat QFloat::fromDecToQFloat(string str)
 {
 	QFloat res;
@@ -176,6 +177,7 @@ QFloat QFloat::fromDecToQFloat(string str)
 	return res;
 }
 
+// chuyển từ chuỗi ở hệ 2 hoặc 10 sang QFloat
 QFloat QFloat::fromStringToQFloat(string str, unsigned short b)
 {
 	if (b == 2)
@@ -184,6 +186,7 @@ QFloat QFloat::fromStringToQFloat(string str, unsigned short b)
 		return fromDecToQFloat(str);
 }
 
+// chuyển từ QFloat sang chuỗi nhị phân
 string QFloat::QFloatToBinStr()
 {
 	string res;
@@ -196,6 +199,7 @@ string QFloat::QFloatToBinStr()
 	return res;
 }
 
+// chuyển từ QFloat sang chuỗi thập phân
 string QFloat::QFloatToDecStr()
 {
 	if (CheckZero()) // nếu là 0
@@ -310,6 +314,7 @@ string QFloat::QFloatToString(unsigned short b)
 		return QFloatToDecStr();
 }
 
+// chuyển từ chuỗi ở hệ a sang chuỗi ở hệ b
 string QFloat::BaseToBase(string str, unsigned short a, unsigned short b)
 {
 	QFloat q = fromStringToQFloat(str, a);
@@ -319,43 +324,496 @@ string QFloat::BaseToBase(string str, unsigned short a, unsigned short b)
 	return res;
 }
 
-////chuyen chuoi nhi phan sang Qfloat
-//void QFloat::StringBinToQFloat(string str)
-//{
-//	while (str.size() < MAX_LENGTH) str.push_back('0');
-//	for (int i = 0; i < MAX_LENGTH; i++)
-//	{
-//		SetBit(MAX_LENGTH - i - 1, str[i] - '0');
-//	}
-//}
-//
-////chuyen so QFloat nhi phan sang thap phan
-//QFloat QFloat::BinToDec(bool *bit)
-//{
-//	QFloat ans;
-//	for (int i = 0; i < MAX_LENGTH; i++)
-//	{
-//		ans.SetBit(MAX_LENGTH - i - 1, bit[i]);
-//	}
-//	return ans;
-//}
-//
-////chuyen so QFloat thap phan sang nhi phan
-//bool* QFloat::DecToBin(QFloat x)
-//{
-//	bool* bit = new bool[MAX_LENGTH];
-//	for (int i = 0; i < MAX_LENGTH; i++)
-//	{
-//		bit[i] = GetBit(MAX_LENGTH - i - 1);
-//	}
-//	return bit;
-//}
+// ====================================== TOÁN TỬ ======================================
 
-//----------------------------------------------------------------------------
-//NHOM HAM HO TRO TINH TOAN
+//Toan tu +
+QFloat QFloat::operator+(const QFloat& plus)
+{
+	QFloat x = *this;
+	QFloat y = plus;
+
+	// Nếu 1 trong 2 hoặc cả 2 là NaN thì trả về NaN
+	if (x.CheckNaN() || y.CheckNaN())
+		return QFloat("NaN");
+
+	// Nếu cả hai là số vô cực -> phép cộng nên trả về vô cực
+	if (x.CheckInf() && y.CheckInf())
+	{
+		if (x.GetBit(MAX_LENGTH - 1) == 1 && y.GetBit(MAX_LENGTH - 1) == 1)
+			return QFloat("-Inf");
+
+		if (x.GetBit(MAX_LENGTH - 1) == 0 && y.GetBit(MAX_LENGTH - 1) == 0)
+			return QFloat("Inf");
+
+		// TH có một số là âm vô cực, một số là dương vô cực
+		return QFloat("NaN");
+	}
+
+	// Nếu một trong hai là số vô cực
+	if ((x.CheckInf() && x.GetBit(MAX_LENGTH - 1) == 1) || (y.CheckInf() && y.GetBit(MAX_LENGTH - 1) == 1))
+		return QFloat("-Inf");
+
+	if ((x.CheckInf() && x.GetBit(MAX_LENGTH - 1) == 0) || (y.CheckInf() && y.GetBit(MAX_LENGTH - 1) == 0))
+		return QFloat("Inf");
+
+	// Nếu 1 trong 2 số là 0, trả về số còn lại
+	if (x.CheckZero())
+		return y;
+
+	if (y.CheckZero())
+		return x;
+
+	// nếu không rơi vào các TH đặc biệt ở trên
+	// Tính phần mũ
+	int eX = x.exponentValue();
+	int eY = y.exponentValue();
+
+	// lấy phần trị lưu vào QInt
+	QInt qX, qY;
+
+	if (x.CheckDenormalized() == false)  // thêm phần nguyên vào QInt, số chuẩn phần nguyên là 1, không chuẩn mặc định là 0
+		qX.SetBit(SIGNIFICAND, 1);
+
+	if (y.CheckDenormalized() == false) // thêm phần nguyên vào QInt, số chuẩn phần nguyên là 1, không chuẩn mặc định là 0 
+		qY.SetBit(SIGNIFICAND, 1);
+
+	for (int i = SIGNIFICAND - 1; i >= 0; i--) // set bit vào QInt
+	{
+		qX.SetBit(i, x.GetBit(i));
+		qY.SetBit(i, y.GetBit(i));
+	}
+
+	// kiểm tra phần mũ có bằng nhau hay không
+	if (eX != eY) // 2 mũ không bằng nhau
+	{
+		if (eX < eY) // nếu eX < eY ta đổi vị trí x, y
+			return (y + x);
+
+		// dịch phải số có phần mũ nhỏ hơn (ta đã có bước hoán vị ở trên nên y là số có mũ nhỏ hơn)
+		// Thêm bit vào eY để cân bằng số mũ
+		while (eX > eY)
+		{
+			qY = qY >> 1; // dịch phải
+			eY++; // tăng số mũ
+		}
+
+		if (qY.isZero())
+			return x;
+	}
+
+	// eX = eY
+	int e = eX; // mũ của kết quả
+	bool sign; // dấu kết quả
+	QFloat result; // kết quả cuối cùng
+
+	bool xSign = x.GetBit(MAX_LENGTH - 1); // dấu x
+	bool ySign = y.GetBit(MAX_LENGTH - 1); // dấu y
+
+	QInt res = addSigned(qX, qY, sign, xSign, ySign);
+
+	// Trường hợp số không chuẩn nhưng phần nguyên bằng = 1 -> tăng exp lên 1
+	if (res.GetBit(SIGNIFICAND) && x.CheckDenormalized() && y.CheckDenormalized())
+		e++;
+
+	if (res.isZero())
+	{
+		return QFloat();
+	}
+
+	if (res.GetBit(SIGNIFICAND + 1) == 1) // tràn -> shift right
+	{
+		res = res >> 1;
+		e++; // tăng số mũ
+
+		if (e > BIAS) // exponent overflow
+		{
+			if (sign)
+				return QFloat("-Inf");
+			return QFloat("Inf");
+		}
+	}
+
+	while (res.GetBit(SIGNIFICAND) == 0 && e != (1 - BIAS)) // số không chuẩn -> shift left
+	{
+		res = res << 1; // dịch trái
+		e--; // giảm số mũ
+		if (e < 1 - BIAS) // exponent underflow
+		{
+			if (sign)
+				return QFloat("-Inf");
+			return QFloat("Inf");
+		}
+	}
+
+	// đổi exp sang nhị phân 
+	if (e == 1 - BIAS) // số không chuẩn
+		e = 0;
+	else
+		e += BIAS;
+
+	if (sign) // nếu là âm
+	{
+		result.SetBit(MAX_LENGTH - 1, 1);
+	}
+
+	QInt exponent(e);
+
+	// Đặt phần mũ
+	for (int i = 1; i <= EXPONENT; i++)
+		result.SetBit(MAX_LENGTH - 1 - i, exponent.GetBit(EXPONENT - i));
+
+	// Đặt phần trị
+	for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
+		result.SetBit(MAX_LENGTH - 1 - i, res.GetBit(MAX_LENGTH - 1 - i));
+
+	return result;
+}
+
+//Toan tu -
+QFloat QFloat::operator- (const QFloat &minus)
+{
+	//Phép trừ là phép cộng với số đối của nó
+	QFloat oppMinus = minus;
+
+	oppMinus.SetBit(MAX_LENGTH - 1, !(oppMinus.GetBit(MAX_LENGTH - 1))); // đổi dấu số trừ
+
+	return (*this + oppMinus);
+}
+
+// Toán tử nhân
+QFloat QFloat::operator*(const QFloat& multiply)
+{
+	QFloat f = multiply;
+
+	if ((CheckInf() && f.CheckZero()) || (CheckZero() && f.CheckInf()))
+	{
+		return QFloat("NaN");
+	}
+
+
+	if (CheckZero() || f.CheckZero())
+		return QFloat();
+
+	string A = this->QFloatToBinStr();
+	string B = f.QFloatToBinStr();
+
+	// lấy chuỗi nhị phân phần mũ
+	string expX = A.substr(1, EXPONENT);
+	string expY = B.substr(1, EXPONENT);
+
+	string firstCharX = "1", firstCharY = "1";
+
+	// Tính phần mũ
+	int eX = stoi(expX, nullptr, 2) - BIAS;
+	int eY = stoi(expY, nullptr, 2) - BIAS;
+
+	if (eX == -BIAS)
+	{
+		eX = -BIAS + 1;
+		firstCharX = "0";
+	}
+	else if (eY == -BIAS)
+	{
+		eY = -BIAS + 1;
+		firstCharY = "0";
+	}
+
+	int e = eX + eY;
+
+	// lấy phần trị
+	string significandA = A.substr(EXPONENT + 1, MAX_LENGTH - 1);
+	string significandB = B.substr(EXPONENT + 1, MAX_LENGTH - 1);
+
+	//Tính vị trí của dấu chấm từ phải qua
+	int decimalPoint = countSignificantNumber(significandA) + countSignificantNumber(significandB);
+
+	significandA = firstCharX + significandA;
+	significandB = firstCharY + significandB;
+
+
+	string C = multiplyBinary(significandA, significandB);
+
+	//Tính số lần di chuyển dấu chấm để normalize
+	int s = C.length() - decimalPoint - 1;
+
+	// Tính dấu
+	bool sign = !(A[0] == B[0]);
+	char signChar = sign + '0';
+
+	//Tính số mũ
+	e += s;
+	if (e < -BIAS + 1)
+		return QFloat(); //Underflow, trả về 0
+	else if (e > BIAS)
+	{
+		if (sign == 1)
+			return QFloat("-Inf");
+		return QFloat("Inf");
+	}
+
+	string m, exp, roundStr;
+
+	while (C.length() < SIGNIFICAND + 1)
+		C = C + "0";
+
+	// Số không chuẩn
+	if (e == -BIAS + 1)
+	{
+		m = C.substr(0, SIGNIFICAND);
+		roundStr = C.substr(SIGNIFICAND, 3);
+
+		exp = "000000000000000";
+	}
+	else
+	{
+		m = C.substr(1, SIGNIFICAND);
+		roundStr = C.substr(SIGNIFICAND + 1, 3);
+
+		e = e + BIAS;
+		exp = IntToBin(to_string(e));
+	}
+
+	//Tính phần trị
+	roundingFrac(roundStr, m);
+	// đổi exp cho đủ độ dài
+	while (exp.length() < EXPONENT)
+		exp = "0" + exp;
+
+	string res = signChar + exp + m;
+	return fromBinToQFloat(res);
+}
+
+// Toán tử chia
+QFloat QFloat::operator/(const QFloat& divide)
+{
+	QFloat f = divide;
+
+	if ((CheckInf() && f.CheckZero()) || (CheckZero() && f.CheckInf()))
+	{
+		return QFloat("NaN");
+	}
+
+	if (CheckZero())
+		return QFloat();
+
+	if (f.CheckZero())
+		return QFloat("NaN");
+
+	string A = this->QFloatToBinStr();
+	string B = f.QFloatToBinStr();
+
+	// lấy chuỗi nhị phân phần mũ
+	string expX = A.substr(1, EXPONENT);
+	string expY = B.substr(1, EXPONENT);
+
+	string firstCharX = "1", firstCharY = "1";
+
+	// Tính phần mũ
+	int eX = stoi(expX, nullptr, 2) - BIAS;
+	int eY = stoi(expY, nullptr, 2) - BIAS;
+
+	if (eX == -BIAS)
+	{
+		eX = -BIAS + 1;
+		firstCharX = "0";
+	}
+	else if (eY == -BIAS)
+	{
+		eY = -BIAS + 1;
+		firstCharY = "0";
+	}
+
+	int e = eX - eY;
+
+	// lấy phần trị
+	string significandA = A.substr(EXPONENT + 1, MAX_LENGTH - 1);
+	string significandB = B.substr(EXPONENT + 1, MAX_LENGTH - 1);
+
+	//Tính vị trí của dấu chấm từ phải qua
+	int decimalPoint = countSignificantNumber(significandA) - countSignificantNumber(significandB);
+
+	significandA = firstCharX + significandA;
+	significandB = firstCharY + significandB;
+
+	int tempNum = 0;
+	string C = divideBinary(significandA, significandB, tempNum);
+
+	//Tính số lần di chuyển dấu chấm để normalize
+	int s = C.length() - decimalPoint - tempNum - 1;
+
+
+	// Tính dấu
+	bool sign = !(A[0] == B[0]);
+	char signChar = sign + '0';
+
+	//Tính số mũ
+	e += s;
+	if (e < -BIAS + 1)
+		return QFloat(); //Underflow, trả về 0
+	else if (e > BIAS)
+	{
+		if (sign == 1)
+			return QFloat("-Inf");
+		return QFloat("Inf");
+	}
+
+	string m, exp, roundStr;
+
+	while (C.length() < SIGNIFICAND + 1)
+		C = C + "0";
+
+	// Số không chuẩn
+	if (e == -BIAS + 1)
+	{
+		m = C.substr(0, SIGNIFICAND);
+		roundStr = C.substr(SIGNIFICAND, 3);
+
+		exp = "000000000000000";
+	}
+	else
+	{
+		m = C.substr(1, SIGNIFICAND);
+		roundStr = C.substr(SIGNIFICAND + 1, 3);
+
+		e = e + BIAS;
+		exp = IntToBin(to_string(e));
+	}
+
+	//Tính phần trị
+	roundingFrac(roundStr, m);
+	// đổi exp cho đủ độ dài
+	while (exp.length() < EXPONENT)
+		exp = "0" + exp;
+
+	string res = signChar + exp + m;
+	return fromBinToQFloat(res);
+}
+
+// toán tử gán =
+QFloat& QFloat::operator=(const QFloat& q)
+{
+	if (this != &q)
+	{
+		for (int i = 0; i < NUM_BLOCK; i++)
+		{
+			this->data[i] = q.data[i];
+		}
+	}
+
+	return *this;
+}
+// ====================================== NHÓM HÀM KHỞi TẠO VÀ HỦY ======================================
+
+QFloat::QFloat()
+{
+	for (int i = 0; i < NUM_BLOCK; i++)
+	{
+		data[i] = 0;
+	}
+}
+
+QFloat::QFloat(string str)
+{
+	if (str == "Inf" || str == "-Inf")
+	{
+		// Đặt phần mũ -> toàn bit 1
+		for (int i = 1; i <= EXPONENT; i++)
+			SetBit(MAX_LENGTH - 1 - i, 1);
+
+		// Đặt phần trị -> toàn bit 0
+		for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
+			SetBit(MAX_LENGTH - 1 - i, 0);
+
+		if (str[0] == '-') // là số âm
+			SetBit(MAX_LENGTH - 1, 1);
+		else // là số dương
+			SetBit(MAX_LENGTH - 1, 0);
+	}
+	else if (str == "NaN")
+	{
+		// Đặt phần mũ -> toàn bit 1
+		for (int i = 1; i <= EXPONENT; i++)
+			SetBit(MAX_LENGTH - 1 - i, 1);
+
+		// Đặt phần trị -> khác bit 0 -> giả sử data[3] toàn bit 1
+		for (int i = EXPONENT + 1; i < MAX_LENGTH - 32; i++)
+			SetBit(MAX_LENGTH - 1 - i, 0);
+		for (int i = MAX_LENGTH - 32; i < MAX_LENGTH; i++)
+			SetBit(MAX_LENGTH - 1 - i, 1);
+
+		if (str[0] == '-') // là số âm
+			SetBit(MAX_LENGTH - 1, 1);
+		else // là số dương
+			SetBit(MAX_LENGTH - 1, 0);
+	}
+	else
+		operator =(fromDecToQFloat(str));
+}
+
+QFloat::~QFloat()
+{
+
+}
+
+// ====================================== NHÓM HÀM KIỂM TRA ======================================
+
+//Kiem tra co phai so 0 hay khong
+bool QFloat::CheckZero()
+{
+	for (int i = 0; i < NUM_BLOCK; i++)
+	{
+		if (data[i] != 0)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+// Kiểm tra dạng số không chuẩn
+bool QFloat::CheckDenormalized()
+{
+	// Phần mũ = 0, phần trị khác 0
+
+	for (int i = 1; i <= EXPONENT; i++)
+		if (GetBit(MAX_LENGTH - 1 - i) != 0)
+			return false;
+	for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
+		if (GetBit(MAX_LENGTH - 1 - i) != 0)
+			return true;
+	return false;
+}
+
+//Kiểm tra có phải là dạng NaN không
+bool QFloat::CheckNaN()
+{
+	// số NaN mũ toàn bit 1, trị khác 0
+	for (int i = 1; i <= EXPONENT; i++)
+		if (GetBit(MAX_LENGTH - 1 - i) != 1)
+			return false;
+	for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
+		if (GetBit(MAX_LENGTH - 1 - i) != 0)
+			return true;
+	return false;
+}
+
+// Kiểm tra có phải là dạng Infinity không
+bool QFloat::CheckInf()
+{
+	// Dạng Inf có phần mũ toàn bit 1, phần trị = 0
+	for (int i = 1; i <= EXPONENT; i++)
+		if (GetBit(MAX_LENGTH - 1 - i) != 1)
+			return false;
+	for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
+		if (GetBit(MAX_LENGTH - 1 - i) != 0)
+			return false;
+	return true;
+}
+
+// ====================================== GET, SET BIT VÀ CÁC HÀM HỖ TRỢ ======================================
 
 //Set bit tai vi tri i
-void QFloat::SetBit(int i, int bit) 
+void QFloat::SetBit(int i, int bit)
 {
 	int block = i / 32;
 	int pos = i % 32;
@@ -365,7 +823,7 @@ void QFloat::SetBit(int i, int bit)
 
 	if (bit == 1)
 	{
-		data[block] = data[block] | (1 << pos); 
+		data[block] = data[block] | (1 << pos);
 	}
 	else
 	{
@@ -374,7 +832,7 @@ void QFloat::SetBit(int i, int bit)
 }
 
 //Lay bit o vi tri i
-int QFloat::GetBit(int i) 
+int QFloat::GetBit(int i)
 {
 	int block = i / 32;
 	int pos = i % 32;
@@ -393,7 +851,7 @@ int QFloat::exponentValue()
 	if (CheckDenormalized())
 		return 1 - BIAS; // -16382
 
-	for (int i = EXPONENT; i >= 1; i--) 
+	for (int i = EXPONENT; i >= 1; i--)
 	{
 		e += GetBit(MAX_LENGTH - i - 1) * (1 << (15 - i));
 	}
@@ -421,7 +879,7 @@ string QFloat::BinToDec(string str)
 	string res = "0";
 
 	string tmp = "1"; // tmp để lưu giá trị tại 2^n, ban đầu 2^0 = 1
-	for (int i = str.length() - 1; i >= 0; i--) 
+	for (int i = str.length() - 1; i >= 0; i--)
 	{
 		if (str[i] == '1') // chỉ cập nhật giá trị tại những nơi có bit = 1
 			res = plusString(res, tmp);
@@ -450,7 +908,7 @@ string QFloat::plusStringFloat(string str1, string str2)
 
 	// cộng 2 chuỗi dương
 	int carry = 0; // nhớ
-	for (int i = str1.length() - 1; i >= 0; i--) 
+	for (int i = str1.length() - 1; i >= 0; i--)
 	{
 		if (str1[i] == '.')
 			res += '.';
@@ -466,7 +924,7 @@ string QFloat::plusStringFloat(string str1, string str2)
 
 	if (carry != 0)
 		res += carry + '0';
-	
+
 	reverse(res.begin(), res.end()); // đảo ngược chuỗi kết quả
 
 	// xóa các số 0 thừa phần thập phân -> tránh thừa số 0 ở cuối
@@ -526,7 +984,7 @@ void QFloat::roundingFrac(string a, string& fracPartBit)
 {
 	if (a[0] == '1') // nếu bit đầu trong 3 bit = 1
 	{
-		if (!(a[1] == '0' && a[2] == '0' && fracPartBit[fracPartBit.size()-1] == '0'))
+		if (!(a[1] == '0' && a[2] == '0' && fracPartBit[fracPartBit.size() - 1] == '0'))
 		{
 			int trace = 1;
 			for (int i = fracPartBit.size() - 1; i >= 0; i--)
@@ -562,20 +1020,20 @@ QInt QFloat::addSigned(QInt x, QInt y, bool& sign, bool xSign, bool ySign)
 
 	QInt res;
 
-	if (cal) 
+	if (cal)
 	{
-		if (x < y) 
+		if (x < y)
 		{
 			res = y - x;
 			sign = ySign;
 		}
-		else 
+		else
 		{
 			res = x - y;
 			sign = xSign;
 		}
 	}
-	else 
+	else
 	{
 		res = x + y;
 		sign = xSign;
@@ -584,846 +1042,159 @@ QInt QFloat::addSigned(QInt x, QInt y, bool& sign, bool xSign, bool ySign)
 	return res;
 }
 
-
-////So sanh 2 day bit
-//int QFloat::SoSanhBit(bool bitX[], int lenX, bool bitY[], int lenY)
-//{
-//	if (lenX < lenY) return -1; //X < Y
-//	if (lenX > lenY) return 1; //X > Y
-//	//So sanh tung cap bit
-//	for (int i = 0; i < lenX; i++)
-//	{
-//		if (bitX[i] < bitY[i]) return -1;
-//		if (bitX[i] > bitY[i]) return 1;
-//	}
-//	return 0; //X = Y
-//}
-//
-////Tru bit: X - Y = Z
-//int QFloat::TruBit(bool bitX[], int lenX, bool bitY[], int lenY, bool bitZ[], int lenZ)
-//{
-//	int ans = 0;
-//	int t;
-//	//Khoi tao
-//	for (int i = 0; i < min(lenX, lenY); i++)
-//	{
-//		t = bitX[lenX - i - 1] - bitY[lenY - i - 1] - ans;
-//		ans = 0;
-//		if (t < 0)
-//		{
-//			t += 2;
-//			ans = 1;
-//		}
-//		bitZ[lenZ - i - 1] = t;
-//	}
-//	//Bat dau tru
-//	for (int i = min(lenX, lenY); i < max(lenX, lenY); i++)
-//	{
-//		if (lenZ - i - 1 < 0) break;
-//		if (lenX - i - 1 < 0)
-//		{
-//			t = 0;
-//		}
-//		else
-//		{
-//			t = bitX[lenX - i - 1];
-//		}
-//		if (lenY - i - 1 < 0)
-//		{
-//			t = t - 0;
-//		}
-//		else
-//		{
-//			t -= bitY[lenY - i - 1];
-//		}
-//		t -= ans;
-//		ans = 0;
-//		if (t < 0)
-//		{
-//			t += 2;
-//			ans = 1;
-//		}
-//		bitZ[lenZ - i - 1] = t;
-//	}
-//	return ans;
-//}
-//
-////Lay dau cua QFloat
-//int QFloat::GetSign() 
-//{
-//	return GetBit(MAX_LENGTH - 1);
-//}
-//
-////Luu dau cua QFloat
-//void QFloat::SaveSign(int dau) 
-//{
-//	SetBit(MAX_LENGTH - 1, dau);
-//}
-//
-////Lay so 0
-//QFloat QFloat::GetZero()
-//{
-//	QFloat Zero;
-//	for (int i = 0; i < MAX_LENGTH; ++i)
-//	{
-//		Zero.SetBit(i, 0);
-//	}
-//	return Zero;
-//}
-//
-////Lay so vo cung
-//QFloat QFloat::GetInf()
-//{
-//	QFloat Inf = GetZero();
-//	for (int i = SIGNIFICAND; i < SIGNIFICAND + EXPONENT; i++)
-//	{
-//		Inf.SetBit(i, 1);
-//	}
-//	return Inf;
-//}
-//
-////Lay so NaN
-//QFloat QFloat::GetNaN()
-//{
-//	QFloat NaN = GetInf();
-//	NaN.SetBit(0, 1);
-//	return NaN;
-//}
-//
-//Kiem tra co phai so 0 hay khong
-bool QFloat::CheckZero() 
+int countSignificantNumber(string& n) // đếm số lượn phần trị
 {
-	for (int i = 0; i < NUM_BLOCK; i++)
+	int count = 0;
+	int i = n.length() - 1;
+	while (i >= 0 && n[i] != '1')
 	{
-		if (data[i] != 0)
+		count++;
+		i--;
+	}
+
+	int num = n.length() - count;
+	if (num == 0)
+	{
+		n = "";
+		return 0;
+	}
+
+	n = n.substr(0, num);
+	return num;
+}
+
+string BinaryAddition(const string& a, const string& b)
+{
+	QInt n1 = QInt::fromBinToQInt(a);
+	QInt n2 = QInt::fromBinToQInt(b);
+
+	QInt n3 = n1 + n2;
+
+	string res = n3.QIntToBinStr();
+	while (res.length() < a.length())
+		res = "0" + res;
+	return res;
+}
+
+string BinarySubSubtraction(const string& a, const string& b)
+{
+	QInt n1 = QInt::fromBinToQInt(a);
+	QInt n2 = QInt::fromBinToQInt(b);
+
+	QInt n3 = n1 - n2;
+
+	string res = n3.QIntToBinStr();
+	while (res.length() < a.length())
+		res = "0" + res;
+	return res.substr(res.length() - a.length()); //Lấy a.lenth() bit cuối;
+}
+
+string multiplyBinary(string& a, string& b)
+{
+	while (a.length() < b.length())
+		a = "0" + a;
+	while (b.length() < a.length())
+		b = "0" + b;
+
+	int len = a.length();
+	string M = a;
+	string A(len, '0');
+	string Q = b;
+	string C = "0";
+
+
+	for (int i = 0; i < len; i++)
+	{
+		if (Q[len - 1] == '1')
 		{
-			return false;
+			A = BinaryAddition(A, M);
+			if (A.length() > len)
+			{
+				C = A[A.length() - len - 1];
+			}
+			A = A.substr(A.size() - len);
 		}
+		string ans = C + A + Q;
+		ans = "0" + ans;
+		ans.pop_back();
+		C = ans[0];
+		A = ans.substr(1, len);
+		Q = ans.substr(len + 1, len);
+	}
+	string ans = A + Q;
+	return ans.substr(ans.find("1"));
+}
+
+bool isStringZero(const string& s)
+{
+	if (s.empty())
+		return false;
+	for (char c : s)
+	{
+		if (c != '0')
+			return false;
 	}
 	return true;
 }
-
-// Kiểm tra dạng số không chuẩn
-bool QFloat::CheckDenormalized() 
+bool isStringBigger(const string& s1, const string& s2) // a > b, length equal
 {
-	// Phần mũ = 0, phần trị khác 0
-
-	for (int i = 1; i <= EXPONENT; i++)
-		if (GetBit(MAX_LENGTH - 1 - i) != 0)
-			return false;
-	for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
-		if (GetBit(MAX_LENGTH - 1 - i) != 0)
-			return true;
+	string a = s1, b = s2;
+	while (a.length() < b.length())
+		a = "0" + a;
+	while (b.length() < a.length())
+		b = "0" + b;
+	for (int i = 0; i < a.length(); i++)
+	{
+		if (a[i] != b[i])
+		{
+			return a[i] > b[i];
+		}
+	}
 	return false;
 }
 
-//Kiểm tra có phải là dạng NaN không
-bool QFloat::CheckNaN()
+string divideBinary(string& a, string& b, int& decimalPoint)
 {
-	// số NaN mũ toàn bit 1, trị khác 0
-	for (int i = 1; i <= EXPONENT; i++) 
-		if (GetBit(MAX_LENGTH - 1 - i) != 1)
-			return false;
-	for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
-		if (GetBit(MAX_LENGTH - 1 - i) != 0)
-			return true;
-	return false;
-}
+	string R = "";
+	string A = a;
+	string B = b;
+	string result;
+	int count = 0;
+	bool stopCount = true;
 
-// Kiểm tra có phải là dạng Infinity không
-bool QFloat::CheckInf()
-{
-	// Dạng Inf có phần mũ toàn bit 1, phần trị = 0
-	for (int i = 1; i <= EXPONENT; i++)
-		if (GetBit(MAX_LENGTH - 1 - i) != 1)
-			return false;
-	for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
-		if (GetBit(MAX_LENGTH - 1 - i) != 0)
-			return false;
-	return true;
-}
-//
-////lay gia tri phan nguyen cua QFloat
-//int QFloat::GetIntPart() 
-//{
-//	if (CheckDenormalized())
-//	{
-//		return 0;
-//	}
-//	return 1;
-//}
-//
-////Tinh gia tri phan mu
-//int QFloat::CalExponent() 
-//{
-//	if (CheckDenormalized())
-//	{
-//		return 1 - BIAS;
-//	}
-//	int ans = 0;
-//	int temp = 1;
-//	for (int i = SIGNIFICAND; i < SIGNIFICAND + EXPONENT; i++)
-//	{
-//		ans += GetBit(i) * temp;
-//		temp = temp * 2;
-//	}
-//	ans -= BIAS;
-//	return ans;
-//}
-//
-////Luu phan mu
-//void QFloat::SaveExponent(int exponent) 
-//{
-//	exponent += BIAS;
-//	for (int i = 0; i < EXPONENT; i++)
-//	{
-//		int bit = (exponent >> i) & 1U; //1U-so 1 unsigned
-//		SetBit(SIGNIFICAND + i, bit);
-//	}
-//}
-//
-////Luu phan tri
-//void QFloat::SaveSignificand(bool BitTri[])
-//{
-//	for (int i = 0; i < SIGNIFICAND; i++)
-//	{
-//		SetBit(SIGNIFICAND - i - 1, BitTri[i]);
-//	}
-//}
-//
-////Shift Right cac bit phan tri
-//void QFloat::ShiftRSignificand(int numBit, int &intPart) 
-//{
-//	if (numBit <= 0) return;
-//
-//	int index;
-//
-//	for (index = 0; index + numBit < SIGNIFICAND; index++)
-//	{
-//		SetBit(index, GetBit(index + numBit));
-//	}
-//
-//	index = SIGNIFICAND - numBit;
-//
-//	if (index >= 0)
-//	{
-//		SetBit(index, intPart);
-//		index++;
-//	}
-//
-//	for (index = max(0, index); index < SIGNIFICAND; index++)
-//	{
-//		SetBit(index, 0);
-//	}
-//
-//	if (numBit > 0)
-//	{
-//		intPart = 0;
-//	}
-//
-//	int exponent = min(CalExponent() + numBit, BIAS + 1);
-//	SaveExponent(exponent);
-//}
-//
-////Shift Left cac bit phan tri
-//void QFloat::ShiftLSignificand(int numBit, int &intPart) 
-//{
-//	if (numBit <= 0) return;
-//
-//	int index = SIGNIFICAND - numBit;
-//	if (index >= 0)
-//	{
-//		intPart = GetBit(index);
-//	}
-//	else
-//	{
-//		intPart = 0;
-//	}
-//	for (index = SIGNIFICAND - 1; index - numBit >= 0; index--)
-//	{
-//		SetBit(index, GetBit(index - numBit));
-//	}
-//	for (index = min(SIGNIFICAND - 1, numBit - 1); index >= 0; index--)
-//	{
-//		SetBit(index, 0);
-//	}
-//	int exponent = CalExponent() - numBit;
-//	SaveExponent(exponent);
-//}
-//
-////Kiem tra tat ca cac bit cua phan tri co = 0 hay khong
-//bool QFloat::CheckSignificandZero(int intPart) 
-//{
-//	for (int i = 0; i < SIGNIFICAND; i++)
-//	{
-//		if (GetBit(i) == 1)
-//		{
-//			return false;
-//		}
-//	}
-//	return true;
-//}
-//
-////Lay phan tri va chuyen thanh day bit
-//void QFloat::ChuyenPhanTriThanhBit(bool bit[]) 
-//{
-//	for (int i = 0; i < SIGNIFICAND; i++)
-//	{
-//		bit[SIGNIFICAND - i] = GetBit(i);
-//	}
-//
-//	if (CheckDenormalized()) //Kiem tra co phai so khong chuan khong
-//	{
-//		bit[0] = 0;
-//	}
-//	else
-//	{
-//		bit[0] = 1;
-//	}
-//}
-//
-////Lam tron so nhi phan (0.5->1, 1.5->2)
-//int QFloat::LamTronNhiPhan(bool bit[])
-//{
-//	int first = bit[SIGNIFICAND + 1];
-//	int second = bit[SIGNIFICAND + 2];
-//	int third = bit[SIGNIFICAND + 3];
-//	if (first == 1)
-//	{
-//		if (!(second == 0 && third == 0 && bit[SIGNIFICAND] == 0))
-//		{
-//			int trace = 1;
-//			for (int i = SIGNIFICAND; i >= 0; i--)
-//			{
-//				if (trace > 0)
-//				{
-//					int count = bit[i] + trace;
-//					bit[i] = count % 2;
-//					trace = count / 2;
-//				}
-//				else break;
-//			}
-//			return trace;
-//		}
-//	}
-//	return 0;
-//}
-//
-////Cong hai phan tri duong X + Y = Z
-//void QFloat::CongPhanTriDuong(QFloat X, int intX, QFloat Y, int intY, QFloat &Z, int &intZ) 
-//{
-//	Z.SaveSign(0);
-//	Z.SaveExponent(X.CalExponent());
-//	int right = 0;
-//	//Cong X + Y
-//	for (int i = 0; i < SIGNIFICAND; i++)
-//	{
-//		int t = X.GetBit(i) + Y.GetBit(i) + right;
-//		Z.SetBit(i, t % 2);
-//		right = t / 2;
-//	}
-//	//Luu ket qua vao Z
-//	intZ = intX + intY + right;
-//	if (intZ > 1)
-//	{
-//		int t = intZ % 2;
-//		Z.ShiftRSignificand(1, t);
-//		intZ /= 2;
-//	}
-//}
-//
-////Tru hai phan tri duong X - Y = Z hoac Y - X = Z
-//void QFloat::TruPhanTriDuong(QFloat X, int intX, QFloat Y, int intY, QFloat &Z, int &intZ) 
-//{
-//	if (intX < intY) // X < Y, lay Y - X
-//	{
-//		TruPhanTriDuong(Y, intY, X, intX, Z, intZ);
-//		Z.SaveSign(1);
-//		return;
-//	}
-//
-//	Z.SaveSign(0);
-//	Z.SaveExponent(X.CalExponent());
-//	int right = 0;
-//	//X > Y, lay X - Y
-//	for (int i = 0; i < SIGNIFICAND; i++)
-//	{
-//		int t = X.GetBit(i) - Y.GetBit(i) - right;
-//		right = 0;
-//		if (t < 0)
-//		{
-//			t = t + 2;
-//			right = 1;
-//		}
-//		Z.SetBit(i, t % 2);
-//	}
-//	//Z < 0
-//	if (intX - intY - right < 0)
-//	{
-//		TruPhanTriDuong(Y, intY, X, intX, Z, intZ);
-//		Z.SaveSign(1);
-//		return;
-//	}
-//	//Z > 0
-//	intZ = intX - intY - right;
-//}
-//
-////Cong hai phan tri co dau X + Y = Z
-//void QFloat::CongPhanTriCoDau(QFloat X, int intX, QFloat Y, int intY, QFloat &Z, int &intZ) 
-//{
-//	if (X.GetSign() == 1)
-//	{
-//		if (Y.GetSign() == 1)
-//		{
-//			// X < 0 va Y < 0
-//			// (-) + (-) = -((+) + (+))
-//			CongPhanTriDuong(X, intX, Y, intY, Z, intZ); //Da luu ket qua vao Z
-//			Z.SaveSign(1); //Z < 0
-//		}
-//		else
-//		{
-//			//X < 0 va Y > 0
-//			// (-) + (+) = (+) - (+)
-//			TruPhanTriDuong(Y, intY, X, intX, Z, intZ); //Da luu ket qua vao Z
-//		}
-//	}
-//	else
-//	{
-//		if (Y.GetSign() == 0)
-//		{
-//			//X > 0 va Y > 0
-//			// (+) + (+) = (+) + (+)
-//			CongPhanTriDuong(X, intX, Y, intY, Z, intZ); //Da luu ket qua vao Z
-//		}
-//		else
-//		{
-//			//X > 0 va Y < 0
-//			// (+) + (-) = (+) - (+)
-//			TruPhanTriDuong(X, intX, Y, intY, Z, intZ); //Da luu ket qua vao Z
-//		}
-//	}
-//}
-//
-////Nhan hai phan tri X * Y = bit (luu vao bit)
-//void QFloat::NhanPhanTri(QFloat X, QFloat Y, bool bit[], int n) 
-//{
-//	//Ap dung thuat toan nhan so cham dong
-//	for (int i = 0; i <= SIGNIFICAND; i++)
-//	{
-//		if ((i == SIGNIFICAND && Y.GetIntPart() == 0) || (i < SIGNIFICAND && Y.GetBit(i) == 0))
-//		{
-//			continue;
-//		}
-//
-//		int j = n - 1 - i;
-//		int right = 0;
-//		int k, t;
-//
-//		for (k = 0; k < SIGNIFICAND; k++)
-//		{
-//			t = X.GetBit(k) + bit[j - k] + right;
-//			bit[j - k] = t % 2;
-//			right = t / 2;
-//		}
-//
-//		t = X.GetIntPart() + bit[j - k] + right;
-//		bit[j - k] = t % 2;
-//		right = t / 2;
-//		k++;
-//
-//		while (right > 0)
-//		{
-//			t = bit[j - k] + right;
-//			bit[j - k] = t % 2;
-//			right = t / 2;
-//			k++;
-//		}
-//	}
-//}
-//
-////-----------------------------------------------------------------------------
-////PHAN THUC HIEN CAC YEU CAU CHINH
-//
-//Toan tu +
-QFloat QFloat::operator+(const QFloat& plus)
-{
-	QFloat x = *this;
-	QFloat y = plus;
 
-	// Nếu 1 trong 2 hoặc cả 2 là NaN thì trả về NaN
-	if (x.CheckNaN() || y.CheckNaN())
-		return QFloat("NaN");
-
-	// Nếu cả hai là số vô cực -> phép cộng nên trả về vô cực
-	if (x.CheckInf() && y.CheckInf())
+	while (result.length() < SIGNIFICAND + 2 && (isStringZero(R) == false || A.length() != 0))
 	{
-		if (x.GetBit(MAX_LENGTH - 1) == 1 && y.GetBit(MAX_LENGTH - 1) == 1)
-			return QFloat("-Inf");
-
-		if (x.GetBit(MAX_LENGTH - 1) == 0 && y.GetBit(MAX_LENGTH - 1) == 0)
-			return QFloat("Inf");
-
-		// TH có một số là âm vô cực, một số là dương vô cực
-		return QFloat("NaN");
-	}
-
-	// Nếu một trong hai là số vô cực
-	if ((x.CheckInf() && x.GetBit(MAX_LENGTH - 1) == 1) || (y.CheckInf() && y.GetBit(MAX_LENGTH - 1) == 1))
-		return QFloat("-Inf");
-
-	if ((x.CheckInf() && x.GetBit(MAX_LENGTH - 1) == 0) || (y.CheckInf() && y.GetBit(MAX_LENGTH - 1) == 0))
-		return QFloat("Inf");
-
-	// Nếu 1 trong 2 số là 0, trả về số còn lại
-	if (x.CheckZero())
-		return y;
-
-	if (y.CheckZero())
-		return x;
-
-	// nếu không rơi vào các TH đặc biệt ở trên
-	// Tính phần mũ
-	int eX = x.exponentValue();
-	int eY = y.exponentValue();
-
-	// lấy phần trị lưu vào QInt
-	QInt qX, qY;
-
-	if (x.CheckDenormalized() == false)  // thêm phần nguyên vào QInt, số chuẩn phần nguyên là 1, không chuẩn mặc định là 0
-		qX.SetBit(SIGNIFICAND, 1);
-	
-	if (y.CheckDenormalized() == false) // thêm phần nguyên vào QInt, số chuẩn phần nguyên là 1, không chuẩn mặc định là 0 
-		qY.SetBit(SIGNIFICAND, 1);
-	
-	for (int i = SIGNIFICAND - 1; i >= 0; i--) // set bit vào QInt
-	{
-		qX.SetBit(i, x.GetBit(i));
-		qY.SetBit(i, y.GetBit(i));
-	}
-
-	// kiểm tra phần mũ có bằng nhau hay không
-	if (eX != eY) // 2 mũ không bằng nhau
-	{
-		if (eX < eY) // nếu eX < eY ta đổi vị trí x, y
-			return (y + x);
-
-		// dịch phải số có phần mũ nhỏ hơn (ta đã có bước hoán vị ở trên nên y là số có mũ nhỏ hơn)
-		// Thêm bit vào eY để cân bằng số mũ
-		while (eX > eY)
+		if (!stopCount)
 		{
-			qY = qY >> 1; // dịch phải
-			eY++; // tăng số mũ
+			count++;
 		}
 
-		if (qY.isZero())
-			return x;
-	}
-
-	// eX = eY
-	int e = eX; // mũ của kết quả
-	bool sign; // dấu kết quả
-	QFloat result; // kết quả cuối cùng
-
-	bool xSign = x.GetBit(MAX_LENGTH - 1); // dấu x
-	bool ySign = y.GetBit(MAX_LENGTH - 1); // dấu y
-
-	QInt res = addSigned(qX, qY, sign, xSign, ySign);
-
-	// Trường hợp số không chuẩn nhưng phần nguyên bằng = 1 -> tăng exp lên 1
-	if (res.GetBit(SIGNIFICAND) && x.CheckDenormalized() && y.CheckDenormalized())
-		e++;
-
-	if (res.isZero())
-	{
-		return QFloat();
-	}
-
-	if (res.GetBit(SIGNIFICAND + 1) == 1) // tràn -> shift right
-	{
-		res = res >> 1;
-		e++; // tăng số mũ
-
-		if (e > BIAS) // exponent overflow
+		R = R + A[0];
+		A.erase(0, 1);
+		if (isStringBigger(B, R))
 		{
-			if (sign)
-				return QFloat("-Inf");
-			return QFloat("Inf");
-		}
-	}
+			if (A.length() < 1)
+			{
+				A = "0";
+				stopCount = false;
+			}
 
-	while (res.GetBit(SIGNIFICAND) == 0 && e != (1-BIAS)) // số không chuẩn -> shift left
-	{
-		res = res << 1; // dịch trái
-		e--; // giảm số mũ
-		if (e < 1 - BIAS) // exponent underflow
+			result = result + "0";
+		}
+		else
 		{
-			if (sign)
-				return QFloat("-Inf");
-			return QFloat("Inf");
+			R = BinarySubSubtraction(R, B);
+			result = result + "1";
 		}
+
+		if (result.find("1") != string::npos)
+			result = result.substr(result.find("1"));
+
 	}
 
-	// đổi exp sang nhị phân 
-	if (e == 1 - BIAS) // số không chuẩn
-		e = 0;
-	else
-		e += BIAS;
-
-	if (sign) // nếu là âm
-	{
-		result.SetBit(MAX_LENGTH - 1, 1);
-	}
-
-	QInt exponent(e);
-
-	// Đặt phần mũ
-	for (int i = 1; i <= EXPONENT; i++)
-		result.SetBit(MAX_LENGTH - 1 - i, exponent.GetBit(EXPONENT - i));
-
-	// Đặt phần trị
-	for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
-		result.SetBit(MAX_LENGTH - 1 - i, res.GetBit(MAX_LENGTH - 1 - i));
-
-	return result;
-}
-
-//Toan tu -
-QFloat QFloat::operator- (const QFloat &minus)
-{
-	//Phép trừ là phép cộng với số đối của nó
-	QFloat oppMinus = minus;
-	
-	oppMinus.SetBit(MAX_LENGTH - 1, !(oppMinus.GetBit(MAX_LENGTH - 1))); // đổi dấu số trừ
-
-	return (*this + oppMinus);
-}
-
-////Toan tu *
-//QFloat QFloat::operator* (const QFloat &multiply)
-//{
-//	//So nhan = 0 hoac so bi nhan = 0
-//	if (this->CheckZero() || multiply.CheckZero())
-//	{
-//		return GetZero();
-//	}
-//
-//	QFloat Z; //*this * multiply = Z
-//	int exponent = this->CalExponent() + multiply.CalExponent(); //phan mu
-//
-//	//tran so, so vo cung
-//	if (exponent > BIAS)
-//	{
-//		Z = GetInf();
-//		Z.SaveSign((this->GetSign() + multiply.GetSign()) % 2);
-//		return Z;
-//	}
-//
-//	Z.SaveSign((this->GetSign() + multiply.GetSign()) % 2);
-//
-//	//Nhan phan tri 
-//	int n = (SIGNIFICAND + 1) * 2 + 1;
-//	bool *bit = new bool[n];
-//
-//	for (int i = 0; i < n; i++)
-//	{
-//		bit[i] = 0;
-//	}
-//	NhanPhanTri(*this, multiply, bit, n);
-//
-//	int chamDong = n - 2 * SIGNIFICAND - 1;
-//	int s = chamDong - bit[chamDong - 1];
-//	bit[s - 1] = LamTronNhiPhan(bit + (s));
-//	int firstBit1 = GetFirstBit1(bit, n);
-//	exponent += chamDong - firstBit1;
-//
-//	if (exponent > BIAS) //Tran bo nho, so vo cung
-//	{
-//		Z = GetInf();
-//		Z.SaveSign((this->GetSign() + multiply.GetSign()) % 2);
-//		delete[] bit;
-//		return Z;
-//	}
-//
-//	if (exponent < 1 - BIAS - SIGNIFICAND) //Tran bo nho, so underflow
-//	{
-//		Z = GetZero();
-//		Z.SaveSign((this->GetSign() + multiply.GetSign()) % 2);
-//		delete[] bit;
-//		return Z;
-//	}
-//
-//	if (exponent < 1 - BIAS) //So dang khong chuan 
-//	{
-//		Z.SaveExponent(-BIAS);
-//		Z.SaveSignificand(bit + firstBit1 + 1 - (1 - BIAS - exponent));
-//	}
-//	else
-//	{
-//		Z.SaveExponent(exponent);
-//		Z.SaveSignificand(bit + firstBit1 + 1);
-//	}
-//
-//	delete[] bit;
-//	return (Z);
-//}
-
-////Toan tu /
-//QFloat QFloat::operator/( QFloat &divide)
-//{
-//	if (this->CheckZero()) //So chia bang 0 
-//	{
-//		return GetZero();
-//	}
-//	if (divide.CheckZero()) //So bi chia bang 0 
-//	{
-//		return GetNaN();
-//	}
-//
-//	//Khoi tao
-//	int exponent = this->CalExponent() - divide.CalExponent(), firstBit, lenX = 0, lenY = 0;
-//
-//	bool* sigX = new bool[2 * BIAS + SIGNIFICAND + 1]; //Phan tri cua so chia
-//	bool* sigY = new bool[SIGNIFICAND + 1]; //Phan tri cua so bi chia
-//	bool* sigZ = new bool[2 * BIAS + SIGNIFICAND + 1]; //Phan tri cua ket qua
-//
-//	this->ChuyenPhanTriThanhBit(sigZ);
-//	firstBit = GetFirstBit1(sigZ, SIGNIFICAND + 1);
-//
-//	for (int i = firstBit; i <= SIGNIFICAND; i++)
-//	{
-//		sigX[lenX++] = sigZ[i];
-//	}
-//
-//	divide.ChuyenPhanTriThanhBit(sigZ);
-//	firstBit = GetFirstBit1(sigZ, SIGNIFICAND + 1);
-//
-//	for (int i = firstBit; i <= SIGNIFICAND; i++) sigY[lenY++] = sigZ[i];
-//
-//	//Chia phan tri
-//	//Dau thap phan sau bit sigZ[lenX - 1]
-//	firstBit = -1;
-//	int lX = 0;
-//	for (int i = 0; ; i++) //Chia den khi khong chia duoc nua
-//	{
-//		if (firstBit >= 0 && exponent + lenX - firstBit - 1 > BIAS) //Tran bo nho (overflow)
-//		{
-//			QFloat Z = GetInf();
-//			Z.SaveSign((this->GetSign() + divide.GetSign()) % 2);
-//			delete[] sigX;
-//			delete[] sigY;
-//			delete[] sigZ;
-//			return Z;
-//		}
-//
-//		if (firstBit == -1 && exponent + lenX - i - 1 < 1 - BIAS - SIGNIFICAND) //Tran bo nho (underflow)
-//		{
-//			QFloat Z = GetZero();
-//			delete[] sigX;
-//			delete[] sigY;
-//			delete[] sigZ;
-//			return Z;
-//		}
-//
-//		if (firstBit >= 0 && i - firstBit > SIGNIFICAND) break; //Dieu kien dung
-//
-//		if (i >= lenX) sigX[i] = 0;
-//
-//		//Bat dau chia
-//		if (SoSanhBit(sigX + lX, i - lX + 1, sigY, lenY) < 0)
-//		{
-//			sigZ[i] = 0;
-//			continue;
-//		}
-//		sigZ[i] = 1;
-//		TruBit(sigX + lX, i - lX + 1, sigY, lenY, sigX + lX, i - lX + 1);
-//		if (firstBit == -1 && sigZ[i] == 1)
-//		{
-//			firstBit = i;
-//		}
-//		while (lX <= i && sigX[lX] == 0) lX++;
-//	}
-//
-//	QFloat Z;
-//	Z.SaveSign((this->GetSign() + divide.GetSign()) % 2);
-//	if (exponent + lenX - firstBit - 1 < 1 - BIAS) //So khong chuan
-//	{
-//		Z.SaveExponent(-BIAS);
-//		Z.SaveSignificand(sigZ + (lenX + 1 + exponent - (1 - BIAS)));
-//	}
-//	else {
-//		Z.SaveExponent(exponent + lenX - firstBit - 1);
-//		Z.SaveSignificand(sigZ + firstBit + 1);
-//	}
-//
-//	delete[] sigX;
-//	delete[] sigY;
-//	delete[] sigZ;
-//
-//	return Z;
-//}
-//
-QFloat& QFloat::operator=(const QFloat& q)
-{
-	if (this != &q)
-	{
-		for (int i = 0; i < NUM_BLOCK; i++)
-		{
-			this->data[i] = q.data[i];
-		}
-	}
-
-	return *this;
-}
-//
-////------------------------------------------------------------------------------------------------
-//PHAN KHOI TAO
-
-QFloat::QFloat()
-{
-	for (int i = 0; i < NUM_BLOCK; i++)
-	{
-		data[i] = 0;
-	}
-}
-
-QFloat::QFloat(string str)
-{
-	if (str == "Inf" || str == "-Inf")
-	{
-		// Đặt phần mũ -> toàn bit 1
-		for (int i = 1; i <= EXPONENT; i++)
-			SetBit(MAX_LENGTH - 1 - i, 1);
-
-		// Đặt phần trị -> toàn bit 0
-		for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
-			SetBit(MAX_LENGTH - 1 - i, 0);
-
-		if (str[0] == '-') // là số âm
-			SetBit(MAX_LENGTH - 1, 1);
-		else // là số dương
-			SetBit(MAX_LENGTH - 1, 0);
-	}
-	else if (str == "NaN") 
-	{
-		// Đặt phần mũ -> toàn bit 1
-		for (int i = 1; i <= EXPONENT; i++)
-			SetBit(MAX_LENGTH - 1 - i, 1);
-
-		// Đặt phần trị -> khác bit 0 -> giả sử data[3] toàn bit 1
-		for (int i = EXPONENT + 1; i < MAX_LENGTH - 32; i++)
-			SetBit(MAX_LENGTH - 1 - i, 0);
-		for (int i = MAX_LENGTH - 32; i < MAX_LENGTH; i++)
-			SetBit(MAX_LENGTH - 1 - i, 1);
-
-		if (str[0] == '-') // là số âm
-			SetBit(MAX_LENGTH - 1, 1);
-		else // là số dương
-			SetBit(MAX_LENGTH - 1, 0);
-	}
-	else
-		operator =(fromDecToQFloat(str));
-}
-
-QFloat::~QFloat()
-{
+	decimalPoint = count;
+	if (result.find("1") == string::npos)
+		return "0";
+	return result.substr(result.find("1"));
 }
