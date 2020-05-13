@@ -760,13 +760,9 @@ QFloat::~QFloat()
 //Kiem tra co phai so 0 hay khong
 bool QFloat::CheckZero()
 {
-	for (int i = 0; i < NUM_BLOCK; i++)
-	{
-		if (data[i] != 0)
-		{
+	for (int i = 1; i < MAX_LENGTH; i++)
+		if (GetBit(MAX_LENGTH - 1 - i) != 0)
 			return false;
-		}
-	}
 	return true;
 }
 

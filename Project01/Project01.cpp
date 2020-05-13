@@ -11,8 +11,8 @@ int main(int argc, char *argv[])
 		type = argv[3][0] - '0';
 	}
 
-	ifstream input("QInt_input.txt"); // đây là định dạng để debug, tham số dòng lệnh thay tham số là argv[1]
-	ofstream output("QInt_output.txt", ios::out); // đây là định dạng để debug, tham số dòng lệnh thay tham số là argv[2]
+	ifstream input("input_Bao.txt"); // đây là định dạng để debug, tham số dòng lệnh thay tham số là argv[1]
+	ofstream output("out_Bao.txt", ios::out); // đây là định dạng để debug, tham số dòng lệnh thay tham số là argv[2]
 
 	if (input.is_open() == 0) // kiểm tra mở file input
 	{
