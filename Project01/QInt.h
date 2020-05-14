@@ -10,7 +10,7 @@ using namespace std;
 
 class QInt
 {
-private: 
+private:
 	int data[4]; // lưu kiểu QInt 16 bytes dưới dạng 4 số nguyên, mỗi số nguyên là 4 bytes. 
 
 public:
@@ -21,12 +21,12 @@ public:
 	~QInt();
 
 	// ============================ CÁC HÀM CHUYỂN ĐỔI ============================
-	
+
 	// Hàm nhập từ chuỗi
-	QInt fromDecToQInt(string str); // chuyển chuỗi thập phân sang QInt
+	static QInt fromDecToQInt(string str); // chuyển chuỗi thập phân sang QInt
 	static QInt fromBinToQInt(string str); // chuyển chuỗi nhị phân sang QInt
-	QInt fromHexToQInt(string str); // chuyển chuỗi thập lục phân sang QInt
-	QInt fromStringToQInt(string str, unsigned short b); // chuyển chuỗi hệ cơ số b sang QInt
+	static QInt fromHexToQInt(string str); // chuyển chuỗi thập lục phân sang QInt
+	static QInt fromStringToQInt(string str, unsigned short b); // chuyển chuỗi hệ cơ số b sang QInt
 
 	// Hàm xuất từ QInt ra chuỗi
 	string QIntToDecStr(); // chuyển QInt sang chuỗi thập phân
@@ -38,9 +38,9 @@ public:
 	string BaseToBase(string str, unsigned short a, unsigned short b); // chuyển đổi chuỗi từ hệ cơ số a sang hệ cơ số b (2, 10, 16)
 
 	// Các hàm chuyển đổi khác
-	QInt toTwoCompliment(QInt q); // chuyển sang dạng bù 2
+	static QInt toTwoCompliment(QInt q); // chuyển sang dạng bù 2
 	// ============================ TOÁN TỬ ============================
-	
+
 	// Toán tử + - * / %
 	QInt operator+(const QInt& plus);
 	QInt operator-(const QInt& minus);
@@ -52,7 +52,7 @@ public:
 	bool operator>(const QInt& other);
 	bool operator<(const QInt& other);
 	bool operator<=(const QInt& other);
-	bool operator>=(const QInt& other); 
+	bool operator>=(const QInt& other);
 	bool operator!=(const QInt& other);
 	bool operator==(const QInt& other);
 	QInt& operator=(const QInt& other);

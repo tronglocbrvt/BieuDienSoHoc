@@ -37,7 +37,7 @@ QInt QInt::fromDecToQInt(string str)
 		sign = 0;
 
 	int i = 0; // bắt đầu set các bit từ data[0]
-	while (str != "0" && str != "") 
+	while (str != "0" && str != "")
 	{
 		unsigned short bit = (str[str.length() - 1] - 48) % 2; // chia 2 lấy phần dư
 		res.SetBit(i, bit); // set bit tại vị trí i
@@ -76,19 +76,19 @@ QInt QInt::fromHexToQInt(string str)
 	{
 		if (str[i] >= 'a' && str[i] <= 'z')
 			str[i] -= 32;
-		
+
 	}
 
 	int pos = 0;
 	unsigned short digit;
 
-	for (int i = str.size() - 1; i > -1; i--) 
+	for (int i = str.size() - 1; i > -1; i--)
 	{
 		if (str[i] >= '0' && str[i] <= '9') // nếu hexa ở dạng từ 0 -> 9
 			digit = str[i] - '0';
 		else // hexa ở dạng A B C D E F (10 -> 15)
 			digit = str[i] + 10 - 'A';
-		
+
 		for (int j = 0; j < 4; j++) // mỗi ký tự trong hexa được lưu bởi 4 bit nhị phân
 		{
 			unsigned short bit = digit & 1; // AND với 1 để lấy ra bit cuối
@@ -114,7 +114,7 @@ QInt QInt::fromStringToQInt(string str, unsigned short b)
 
 // chuyển QInt sang chuỗi thập phân
 string QInt::QIntToDecStr()
-{ 
+{
 	string res = "0";
 
 	string tmp = "1"; // tmp để lưu giá trị tại 2^n, ban đầu 2^0 = 1
@@ -137,7 +137,7 @@ string QInt::QIntToBinStr()
 {
 	string res;
 
-	for (int i = NUM_BIT - 1; i >= 0; i--) 
+	for (int i = NUM_BIT - 1; i >= 0; i--)
 	{
 		res += GetBit(i) + '0';
 	}
@@ -145,7 +145,7 @@ string QInt::QIntToBinStr()
 	// xóa số 0 thừa
 	for (int i = 0; i < NUM_BIT - 1; i++) // chừa lại bit cuối
 	{
-		if (res[i] == '0')
+		if (res[i] == '0' && res != "0")
 		{
 			res.erase(res.begin() + 0);
 			i--;
@@ -162,7 +162,7 @@ string QInt::QIntToHexStr()
 {
 	string res; // chuỗi kết quả
 
-	map<string,string> mp; // lưu các giá trị đặc biệt của 16 ký tự hexa
+	map<string, string> mp; // lưu các giá trị đặc biệt của 16 ký tự hexa
 	mp["0000"] = "0";
 	mp["0001"] = "1";
 	mp["0010"] = "2";
@@ -179,7 +179,7 @@ string QInt::QIntToHexStr()
 	mp["1101"] = "D";
 	mp["1110"] = "E";
 	mp["1111"] = "F";
-	
+
 	for (int i = 0; i < NUM_BIT - 1; i = i + 4) // vì mỗi ký tự hexa được biểu diễn bằng 4 bit -> bước nhảy là 4
 	{
 		string temp; // lưu dãy bit của ký tự hexa
@@ -221,7 +221,7 @@ string QInt::BaseToBase(string str, unsigned short a, unsigned short b)
 {
 	QInt q = fromStringToQInt(str, a);
 
-	string res = q.QIntToString(b);	
+	string res = q.QIntToString(b);
 
 	return res;
 }
@@ -240,7 +240,7 @@ QInt QInt::operator+(const QInt& plus)
 	QInt q = plus;
 	QInt res; // lưu kết quả
 	unsigned short carry = 0; // nhớ
-	
+
 	for (int i = 0; i < NUM_BIT; i++)
 	{
 		unsigned short tmp = GetBit(i) + q.GetBit(i) + carry;
@@ -335,7 +335,7 @@ QInt QInt::operator/(const QInt& divide)
 		A.SetBit(0, firstQ); // set lại bit cuối của A
 
 		A = A - M;
-		
+
 		if (A.isNegative()) // A < 0
 		{
 			Q.SetBit(0, 0);
@@ -468,7 +468,7 @@ bool QInt::operator==(const QInt& other)
 			return false;
 	}
 
-	return true; 
+	return true;
 }
 
 // toán tử gán
@@ -542,7 +542,7 @@ QInt QInt::operator^(const QInt & q)
 // Phép dịch trái số học
 QInt QInt::operator<<(unsigned int x) // dịch trái x bit
 {
-	QInt res; 
+	QInt res;
 
 	for (int i = NUM_BIT - 1 - x; i >= 0; i--)
 	{
@@ -560,7 +560,7 @@ QInt QInt::operator<<(unsigned int x) // dịch trái x bit
 // Phép dịch phải số học
 QInt QInt::operator>>(unsigned int x) // dịch phải x bit
 {
-	QInt res; 
+	QInt res;
 
 	for (int i = x; i < NUM_BIT; i++) // dịch phải
 	{
@@ -581,11 +581,11 @@ QInt QInt::operator>>(unsigned int x) // dịch phải x bit
 QInt & QInt::rol(unsigned int x) // xoay trái x bit
 {
 	int num = x % 128; // lấy số lượng bit cần xoay
-	for(int i = 0; i < num; i++)
+	for (int i = 0; i < num; i++)
 	{
-			unsigned short bit = GetBit(NUM_BIT - 1); // lưu bit NUM_BIT - 1
-			*this = *this << 1; // dịch trái 1 bit
-			SetBit(0, bit); // chèn bit bị đẩy vào
+		unsigned short bit = GetBit(NUM_BIT - 1); // lưu bit NUM_BIT - 1
+		*this = *this << 1; // dịch trái 1 bit
+		SetBit(0, bit); // chèn bit bị đẩy vào
 	}
 	return *this;
 }
@@ -596,9 +596,9 @@ QInt & QInt::ror(unsigned int x) // xoay phải x bit
 	int num = x % 128; // lấy số lượng bit cần xoay
 	for (int i = 0; i < num; i++)
 	{
-			unsigned short bit = GetBit(0); // lưu bit thứ 0
-			*this = *this >> 1; // dịch phải 1 bit
-			SetBit(NUM_BIT - 1, bit); // chèn bit bị đẩy vào
+		unsigned short bit = GetBit(0); // lưu bit thứ 0
+		*this = *this >> 1; // dịch phải 1 bit
+		SetBit(NUM_BIT - 1, bit); // chèn bit bị đẩy vào
 	}
 	return *this;
 }

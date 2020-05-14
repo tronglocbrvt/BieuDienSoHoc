@@ -61,7 +61,7 @@ QFloat QFloat::fromDecToQFloat(string str)
 	int exp = 0;
 	int count = 0;
 	bool checkRound = false; // biến check xem phần thập phân đã được 1.0 sau khi x2 liên tiếp hay chưa
-	
+
 	if (intPartBit != "") // phần nguyên khác 0 -> dạng chuẩn hóa được
 	{
 		exp = intPartBit.size() - 1 + BIAS; // vì phần nguyên khác 0 nên tối thiểu là length intPartBit = 1
@@ -86,7 +86,7 @@ QFloat QFloat::fromDecToQFloat(string str)
 			fracPart = plusStringFloat(fracPart, fracPart); // nhân 2 
 			fracPartBit += fracPart[0]; // lấy phần nguyên
 			fracPart[0] = '0'; // gán phần nguyên bằng 0
-			
+
 			if (fracPartBit.back() == '1') // đã xác định được vị trí số 1 xuất hiện
 				break;
 			count++;
@@ -119,7 +119,7 @@ QFloat QFloat::fromDecToQFloat(string str)
 					checkRound = true;
 				}
 			}
-			
+
 		}
 	}
 
@@ -154,9 +154,9 @@ QFloat QFloat::fromDecToQFloat(string str)
 	}
 
 	string resStr = intPartBit + fracPartBit;
-	while (resStr.size() < 113) 
+	while (resStr.size() < 113)
 		resStr += '0';
-	
+
 	// đổi exp sang nhị phân 
 	string exponent = IntToBin(to_string(exp));
 	int lengthExp = exponent.length();
@@ -168,12 +168,12 @@ QFloat QFloat::fromDecToQFloat(string str)
 
 	// Đặt phần mũ
 	for (int i = 1; i <= EXPONENT; i++)
-		res.SetBit(MAX_LENGTH - 1 - i, exponent[i-1] - 48);
+		res.SetBit(MAX_LENGTH - 1 - i, exponent[i - 1] - 48);
 
 	// Đặt phần trị
 	for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
 		res.SetBit(MAX_LENGTH - 1 - i, resStr[i - 15 + count] - 48);
-	
+
 	return res;
 }
 
@@ -195,7 +195,7 @@ string QFloat::QFloatToBinStr()
 	{
 		res += GetBit(i) + '0';
 	}
-	
+
 	return res;
 }
 
@@ -204,7 +204,7 @@ string QFloat::QFloatToDecStr()
 {
 	if (CheckZero()) // nếu là 0
 		return "0";
-	
+
 	if (CheckNaN()) // nếu là NaN
 		return "NaN";
 
@@ -219,7 +219,7 @@ string QFloat::QFloatToDecStr()
 		return ((sign == "-") ? "-Inf" : "Inf");
 
 	string exponent = qfloat.substr(1, EXPONENT); // phần mũ
-	
+
 	string fracPart = qfloat.substr(EXPONENT + 1, MAX_LENGTH - 1); // phần trị sau dấu chấm
 
 	string intPart; // phần nguyên trước dấu chấm
@@ -237,7 +237,7 @@ string QFloat::QFloatToDecStr()
 		intPart = '1'; // dạng chuẩn hóa được -> 1.F
 		exp = stoi(exponent, nullptr, 2) - BIAS;
 	}
-	
+
 	// bước 3: dời dấu chấm động khi exp != 0
 	// nếu ta dời qua bên phải -> exp dương
 	// nếu ta dời qua bên trái -> exp âm
@@ -252,16 +252,16 @@ string QFloat::QFloatToDecStr()
 			// dời lần 2: phần thập phân hết -> ta thêm 0 vào phần nguyên từ 10011 -> 100110  ->>> 100110 * 2^0
 			// --> mỗi lần dịch phần nguyên + thêm và phần thập phân xóa bớt
 			// nếu đã dịch hết phần thập phân -> ta thêm 0 vào phần nguyên
-			if (fracPart.size() > 0)													
-			{ 
+			if (fracPart.size() > 0)
+			{
 				intPart += fracPart[0];
 				fracPart.erase(fracPart.begin() + 0);
 			}
-			else																	
+			else
 			{
 				intPart += '0';
 			}
-						
+
 			exp--;
 		}
 		// TH2: xét exp âm  ->  dời qua trái
@@ -272,13 +272,13 @@ string QFloat::QFloatToDecStr()
 			// dời lần 2: phần thập phân từ 10011 -> 010011 (ta thêm 0 vào trước vì phần nguyên hết)  ->>> 0.010011 * 2^0
 			// --> mỗi lần dịch phần nguyên xóa bớt và phần thập phân cộng thêm
 			// nếu đã dịch hết phần nguyên -> ta thêm 0 vào phần thập phân
-			if (intPart.size() > 0)													
+			if (intPart.size() > 0)
 			{
 				fracPart = intPart[intPart.length() - 1] + fracPart;
 				intPart.erase(intPart.begin() + intPart.length() - 1);
 			}
 
-			else		
+			else
 			{
 				fracPart = '0' + fracPart;
 			}
@@ -484,13 +484,23 @@ QFloat QFloat::operator- (const QFloat &minus)
 QFloat QFloat::operator*(const QFloat& multiply)
 {
 	QFloat f = multiply;
+	// Nếu 1 trong 2 là số báo lỗi
+	if (CheckNaN() || f.CheckNaN()) 
+		return QFloat("NaN");
 
+	// Nếu là vô cực nhân 0
 	if ((CheckInf() && f.CheckZero()) || (CheckZero() && f.CheckInf()))
 	{
 		return QFloat("NaN");
 	}
 
-
+	// Nếu là vô cực nhân một số
+	if (CheckInf() || f.CheckInf()) {
+		if (GetBit(MAX_LENGTH - 1) ^ f.GetBit(MAX_LENGTH - 1)) 
+			return QFloat("-Inf");
+		return QFloat("Inf");
+	}
+	
 	if (CheckZero() || f.CheckZero())
 		return QFloat();
 
@@ -588,16 +598,32 @@ QFloat QFloat::operator/(const QFloat& divide)
 {
 	QFloat f = divide;
 
-	if ((CheckInf() && f.CheckZero()) || (CheckZero() && f.CheckInf()))
-	{
+	// Nếu 1 trong 2 là NaN, báo lỗi
+	if (CheckNaN() || f.CheckNaN()) 
 		return QFloat("NaN");
-	}
 
+	// a / 0 = Undefined
+	if (f.CheckZero())
+		return QFloat("NaN");
+
+	// 0 / a = 0 (a khác 0)
 	if (CheckZero())
 		return QFloat();
 
-	if (f.CheckZero())
+	// oo / oo = Undefined
+	if (CheckInf() && f.CheckInf()) 
 		return QFloat("NaN");
+
+	// oo / a = oo (xét dấu)
+	if (CheckInf()) {
+		if (f.GetBit(MAX_LENGTH - 1) ^ GetBit(MAX_LENGTH - 1)) 
+			return QFloat("-Inf");
+		return QFloat("Inf");
+	}
+	// a / oo = 0 (a khác vô cực)
+	if (f.CheckInf()) 
+		return QFloat();
+
 
 	string A = this->QFloatToBinStr();
 	string B = f.QFloatToBinStr();
