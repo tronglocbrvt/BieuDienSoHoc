@@ -767,8 +767,7 @@ string StrDiv2(string str)
 // kiểm tra có phải số âm hay không
 bool QInt::isNegative()
 {
-	return data[NUM_BLOCK - 1] & 1; // bit đầu của QInt (bit dấu) tức là bit đầu của data[3] (lưu ý bit đầu là bit bên phải cùng vì 
-						// bit được đánh số thứ tự từ phải qua; AND với 1 ta lấy ra được giá trị của bit đó.
+	return GetBit(NUM_BIT - 1) ? true : false; // kiểm tra bit dấu
 }
 
 // kiểm tra có bằng 0 hay không

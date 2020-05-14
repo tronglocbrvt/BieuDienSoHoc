@@ -4,15 +4,15 @@
 
 int main(int argc, char *argv[])
 {
-	int type = 2;
+	int type = 1;
 
 	if (argc == 4) // Tên file thực thi, file input, file ouput và type (QInt / QFloat)
 	{
 		type = argv[3][0] - '0';
 	}
 
-	ifstream input("new2.txt"); // đây là định dạng để debug, tham số dòng lệnh thay tham số là argv[1]
-	ofstream output("new2_out.txt", ios::out); // đây là định dạng để debug, tham số dòng lệnh thay tham số là argv[2]
+	ifstream input("testcase_QInt.txt"); // đây là định dạng để debug, tham số dòng lệnh thay tham số là argv[1]
+	ofstream output("testcase_out_QInt.txt", ios::out); // đây là định dạng để debug, tham số dòng lệnh thay tham số là argv[2]
 
 	if (input.is_open() == 0) // kiểm tra mở file input
 	{
@@ -247,16 +247,20 @@ int main(int argc, char *argv[])
 	input.close();
 	output.close();
 
-	//string a = "-99999888887777766666777778888899999.5555544444333332222211111";
-	//string b = "11111222223333344444333332222211111.1111122222333334444455555";
-	//QFloat res1, res2;
-	//res1 = res1.fromDecToQFloat(a);
-	//res2 = res2.fromDecToQFloat(b);
-	//
-	//QFloat res = res1 + res2;
-	////QInt res = res1 << 9378;
-	//cout << res.QFloatToBinStr() << endl;
+	//string a = "335ED2DE47B4E5E76AA5243758A764";
+	//string b = "F2374E183FF3BDA9B571DE213E7B0E";
 
+	//QInt res1 = res1.fromHexToQInt(a);
+	//QInt res2 = res2.fromHexToQInt(b);
+	//QInt res = res1 / res2; 
+	////QFloat res1, res2;
+	////res1 = res1.fromDecToQFloat(a);
+	////res2 = res2.fromDecToQFloat(b);
+	////
+	////QFloat res = res1 + res2;
+	//////QInt res = res1 << 9378;
+	//cout << res.QIntToDecStr() << endl;
+	//cout << res2.QIntToDecStr() << endl;
 	system("pause");
 	return 0;
 }
