@@ -1,13 +1,2 @@
 ﻿  Project01.cpp
-  QInt.cpp
-c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(59): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned short', possible loss of data
-c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(85): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(552): warning C4018: '<': signed/unsigned mismatch
-c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(650): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(662): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(693): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(714): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-  Generating Code...
-c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(113): warning C4715: 'QInt::fromStringToQInt': not all control paths return a value
-c:\users\trong\onedrive - vnu-hcmus\learning hcmus\4th semester\kiến trúc máy tính & hợp ngữ\bieudiensohoc\project01\qint.cpp(217): warning C4715: 'QInt::QIntToString': not all control paths return a value
   Project01.vcxproj -> C:\Users\trong\OneDrive - VNU-HCMUS\Learning HCMUS\4th Semester\Kiến trúc máy tính & Hợp ngữ\BieuDienSoHoc\x64\Debug\Project01.exe

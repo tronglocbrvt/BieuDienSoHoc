@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <sstream>
 #include "QInt.h"
+#include <bitset>
 
 using namespace std;
 
@@ -28,7 +29,7 @@ public:
 	static QFloat fromStringToQFloat(string str, unsigned short b); // chuyển chuỗi hệ cơ số b sang QFloat
 
 	// Nhóm hàm xuất
-	string QFloatToBinStr();
+	string QFloatToBinStr() const;
 	string QFloatToDecStr();
 	string QFloatToString(unsigned short b); // chuyển QFloat sang chuỗi ở hệ cơ số b
 
@@ -51,14 +52,14 @@ public:
 	~QFloat();
 	// ====================================== NHÓM HÀM KIỂM TRA ======================================
 
-	bool CheckZero(); // Kiểm tra có phải là 0 hay không
-	bool CheckDenormalized(); // Kiểm tra dạng số không chuẩn
-	bool CheckNaN(); // Kiểm tra có phải là dạng NaN không
-	bool CheckInf(); // Kiểm tra có phải là dạng Infinity không
+	bool CheckZero() const; // Kiểm tra có phải là 0 hay không
+	bool CheckDenormalized() const; // Kiểm tra dạng số không chuẩn
+	bool CheckNaN() const; // Kiểm tra có phải là dạng NaN không
+	bool CheckInf() const; // Kiểm tra có phải là dạng Infinity không
 
 	// ====================================== GET, SET BIT VÀ CÁC HÀM HỖ TRỢ ======================================
 	void SetBit(int i, int bit); //Set bit tại vị trí i
-	int GetBit(int i); //Lấy bit ở vị trí i
+	int GetBit(int i) const; //Lấy bit ở vị trí i
 	int exponentValue(); // lấy giá trị phần mũ
 	static string plusStringFloat(string str1, string str2); // cộng chuỗi thập phân
 	static string IntToBin(string str); // chuyển số nguyên sang nhị phân

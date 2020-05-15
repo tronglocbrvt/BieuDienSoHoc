@@ -187,7 +187,7 @@ QFloat QFloat::fromStringToQFloat(string str, unsigned short b)
 }
 
 // chuyển từ QFloat sang chuỗi nhị phân
-string QFloat::QFloatToBinStr()
+string QFloat::QFloatToBinStr() const
 {
 	string res;
 
@@ -411,9 +411,10 @@ QFloat QFloat::operator+(const QFloat& plus)
 
 	QInt res = addSigned(qX, qY, sign, xSign, ySign);
 
-	// Trường hợp số không chuẩn nhưng phần nguyên bằng = 1 -> tăng exp lên 1
+	bool flag = false;
+	// Trường hợp số không chuẩn nhưng phần nguyên bằng = 1 -> đặt flag = true
 	if (res.GetBit(SIGNIFICAND) && x.CheckDenormalized() && y.CheckDenormalized())
-		e++;
+		flag = true;
 
 	if (res.isZero())
 	{
@@ -451,6 +452,9 @@ QFloat QFloat::operator+(const QFloat& plus)
 	else
 		e += BIAS;
 
+	if (flag == true)
+		e = 1;
+
 	if (sign) // nếu là âm
 	{
 		result.SetBit(MAX_LENGTH - 1, 1);
@@ -480,12 +484,10 @@ QFloat QFloat::operator- (const QFloat &minus)
 	return (*this + oppMinus);
 }
 
-// Toán tử nhân
-QFloat QFloat::operator*(const QFloat& multiply)
+QFloat QFloat::operator*(const QFloat& f)
 {
-	QFloat f = multiply;
 	// Nếu 1 trong 2 là số báo lỗi
-	if (CheckNaN() || f.CheckNaN()) 
+	if (CheckNaN() || f.CheckNaN())
 		return QFloat("NaN");
 
 	// Nếu là vô cực nhân 0
@@ -496,11 +498,11 @@ QFloat QFloat::operator*(const QFloat& multiply)
 
 	// Nếu là vô cực nhân một số
 	if (CheckInf() || f.CheckInf()) {
-		if (GetBit(MAX_LENGTH - 1) ^ f.GetBit(MAX_LENGTH - 1)) 
+		if (GetBit(MAX_LENGTH - 1) ^ f.GetBit(MAX_LENGTH - 1))
 			return QFloat("-Inf");
 		return QFloat("Inf");
 	}
-	
+
 	if (CheckZero() || f.CheckZero())
 		return QFloat();
 
@@ -522,7 +524,7 @@ QFloat QFloat::operator*(const QFloat& multiply)
 		eX = -BIAS + 1;
 		firstCharX = "0";
 	}
-	else if (eY == -BIAS)
+	if (eY == -BIAS)
 	{
 		eY = -BIAS + 1;
 		firstCharY = "0";
@@ -580,7 +582,9 @@ QFloat QFloat::operator*(const QFloat& multiply)
 		roundStr = C.substr(SIGNIFICAND + 1, 3);
 
 		e = e + BIAS;
-		exp = IntToBin(to_string(e));
+		exp = QInt::BaseToBase(to_string(e), 10, 2);
+		if (EXPONENT < exp.length())
+			exp = exp.substr(exp.size() - EXPONENT);
 	}
 
 	//Tính phần trị
@@ -593,13 +597,10 @@ QFloat QFloat::operator*(const QFloat& multiply)
 	return fromBinToQFloat(res);
 }
 
-// Toán tử chia
-QFloat QFloat::operator/(const QFloat& divide)
+QFloat QFloat::operator/(const QFloat& f)
 {
-	QFloat f = divide;
-
 	// Nếu 1 trong 2 là NaN, báo lỗi
-	if (CheckNaN() || f.CheckNaN()) 
+	if (CheckNaN() || f.CheckNaN())
 		return QFloat("NaN");
 
 	// a / 0 = Undefined
@@ -611,19 +612,18 @@ QFloat QFloat::operator/(const QFloat& divide)
 		return QFloat();
 
 	// oo / oo = Undefined
-	if (CheckInf() && f.CheckInf()) 
+	if (CheckInf() && f.CheckInf())
 		return QFloat("NaN");
 
 	// oo / a = oo (xét dấu)
 	if (CheckInf()) {
-		if (f.GetBit(MAX_LENGTH - 1) ^ GetBit(MAX_LENGTH - 1)) 
+		if (f.GetBit(MAX_LENGTH - 1) ^ GetBit(MAX_LENGTH - 1))
 			return QFloat("-Inf");
 		return QFloat("Inf");
 	}
 	// a / oo = 0 (a khác vô cực)
-	if (f.CheckInf()) 
+	if (f.CheckInf())
 		return QFloat();
-
 
 	string A = this->QFloatToBinStr();
 	string B = f.QFloatToBinStr();
@@ -643,7 +643,7 @@ QFloat QFloat::operator/(const QFloat& divide)
 		eX = -BIAS + 1;
 		firstCharX = "0";
 	}
-	else if (eY == -BIAS)
+	if (eY == -BIAS)
 	{
 		eY = -BIAS + 1;
 		firstCharY = "0";
@@ -702,7 +702,9 @@ QFloat QFloat::operator/(const QFloat& divide)
 		roundStr = C.substr(SIGNIFICAND + 1, 3);
 
 		e = e + BIAS;
-		exp = IntToBin(to_string(e));
+		exp = QInt::BaseToBase(to_string(e), 10, 2);
+		if (EXPONENT < exp.length())
+			exp = exp.substr(exp.size() - EXPONENT);
 	}
 
 	//Tính phần trị
@@ -738,6 +740,7 @@ QFloat::QFloat()
 	}
 }
 
+// Constructor từ string DEC
 QFloat::QFloat(string str)
 {
 	if (str == "Inf" || str == "-Inf")
@@ -784,7 +787,7 @@ QFloat::~QFloat()
 // ====================================== NHÓM HÀM KIỂM TRA ======================================
 
 //Kiem tra co phai so 0 hay khong
-bool QFloat::CheckZero()
+bool QFloat::CheckZero() const
 {
 	for (int i = 1; i < MAX_LENGTH; i++)
 		if (GetBit(MAX_LENGTH - 1 - i) != 0)
@@ -793,7 +796,7 @@ bool QFloat::CheckZero()
 }
 
 // Kiểm tra dạng số không chuẩn
-bool QFloat::CheckDenormalized()
+bool QFloat::CheckDenormalized() const
 {
 	// Phần mũ = 0, phần trị khác 0
 
@@ -807,7 +810,7 @@ bool QFloat::CheckDenormalized()
 }
 
 //Kiểm tra có phải là dạng NaN không
-bool QFloat::CheckNaN()
+bool QFloat::CheckNaN() const
 {
 	// số NaN mũ toàn bit 1, trị khác 0
 	for (int i = 1; i <= EXPONENT; i++)
@@ -820,7 +823,7 @@ bool QFloat::CheckNaN()
 }
 
 // Kiểm tra có phải là dạng Infinity không
-bool QFloat::CheckInf()
+bool QFloat::CheckInf() const
 {
 	// Dạng Inf có phần mũ toàn bit 1, phần trị = 0
 	for (int i = 1; i <= EXPONENT; i++)
@@ -854,7 +857,7 @@ void QFloat::SetBit(int i, int bit)
 }
 
 //Lay bit o vi tri i
-int QFloat::GetBit(int i)
+int QFloat::GetBit(int i) const
 {
 	int block = i / 32;
 	int pos = i % 32;
@@ -1064,7 +1067,34 @@ QInt QFloat::addSigned(QInt x, QInt y, bool& sign, bool xSign, bool ySign)
 	return res;
 }
 
-int countSignificantNumber(string& n) // đếm số lượn phần trị
+
+string BinaryAddition(const string& a, const string& b)
+{
+	QInt n1 = QInt::fromBinToQInt(a);
+	QInt n2 = QInt::fromBinToQInt(b);
+
+	QInt n3 = n1 + n2;
+
+	string res = n3.QIntToBinStr();
+	while (res.length() < a.length())
+		res = "0" + res;
+	return res;
+}
+string BinarySubSubtraction(const string& a, const string& b)
+{
+	QInt n1 = QInt::fromBinToQInt(a);
+	QInt n2 = QInt::fromBinToQInt(b);
+
+	QInt n3 = n1 - n2;
+
+	string res = n3.QIntToBinStr();
+	while (res.length() < a.length())
+		res = "0" + res;
+	return res.substr(res.length() - a.length()); //Lấy a.lenth() bit cuối;
+}
+
+
+int countSignificantNumber(string& n)
 {
 	int count = 0;
 	int i = n.length() - 1;
@@ -1083,32 +1113,6 @@ int countSignificantNumber(string& n) // đếm số lượn phần trị
 
 	n = n.substr(0, num);
 	return num;
-}
-
-string BinaryAddition(const string& a, const string& b)
-{
-	QInt n1 = QInt::fromBinToQInt(a);
-	QInt n2 = QInt::fromBinToQInt(b);
-
-	QInt n3 = n1 + n2;
-
-	string res = n3.QIntToBinStr();
-	while (res.length() < a.length())
-		res = "0" + res;
-	return res;
-}
-
-string BinarySubSubtraction(const string& a, const string& b)
-{
-	QInt n1 = QInt::fromBinToQInt(a);
-	QInt n2 = QInt::fromBinToQInt(b);
-
-	QInt n3 = n1 - n2;
-
-	string res = n3.QIntToBinStr();
-	while (res.length() < a.length())
-		res = "0" + res;
-	return res.substr(res.length() - a.length()); //Lấy a.lenth() bit cuối;
 }
 
 string multiplyBinary(string& a, string& b)
@@ -1153,7 +1157,7 @@ bool isStringZero(const string& s)
 		return false;
 	for (char c : s)
 	{
-		if (c != '0')
+		if (c >= '1' && c <= '9')
 			return false;
 	}
 	return true;
@@ -1181,24 +1185,31 @@ string divideBinary(string& a, string& b, int& decimalPoint)
 	string A = a;
 	string B = b;
 	string result;
-	int count = 0;
+	int count = 1;
 	bool stopCount = true;
 
-
-	while (result.length() < SIGNIFICAND + 2 && (isStringZero(R) == false || A.length() != 0))
+	if (a.length() < b.length())
 	{
-		if (!stopCount)
-		{
-			count++;
-		}
+		R = A;
+		A = "";
+	}
+	else
+	{
+		R = A.substr(0, B.length());
+		A.erase(0, B.length());
+	}
 
-		R = R + A[0];
-		A.erase(0, 1);
+
+	while (result.length() < SIGNIFICAND + 5 && (isStringZero(R) == false || A.empty() == false))
+	{
+		if (stopCount && A.empty() == false)
+			count++;
+
 		if (isStringBigger(B, R))
 		{
 			if (A.length() < 1)
 			{
-				A = "0";
+				A = A + "0";
 				stopCount = false;
 			}
 
@@ -1210,12 +1221,18 @@ string divideBinary(string& a, string& b, int& decimalPoint)
 			result = result + "1";
 		}
 
-		if (result.find("1") != string::npos)
-			result = result.substr(result.find("1"));
-
+		if (stopCount)
+		{
+			R = R + A[0];
+			A.erase(0, 1);
+		}
+		else
+		{
+			R = R + "0";
+		}
 	}
 
-	decimalPoint = count;
+	decimalPoint = result.length() - count;
 	if (result.find("1") == string::npos)
 		return "0";
 	return result.substr(result.find("1"));
