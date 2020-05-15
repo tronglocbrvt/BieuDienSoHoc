@@ -4,15 +4,15 @@
 
 int main(int argc, char *argv[])
 {
-	int type = 2;
+	int type = 1;
 
 	if (argc == 4) // Tên file thực thi, file input, file ouput và type (QInt / QFloat)
 	{
 		type = argv[3][0] - '0';
 	}
 
-	ifstream input("testcase_QFloat.txt"); // đây là định dạng để debug, tham số dòng lệnh thay tham số là argv[1]
-	ofstream output("testcase_out_QFloat.txt", ios::out); // đây là định dạng để debug, tham số dòng lệnh thay tham số là argv[2]
+	ifstream input(argv[1]); // đây là định dạng để debug, tham số dòng lệnh thay tham số là argv[1]
+	ofstream output(argv[2], ios::out); // đây là định dạng để debug, tham số dòng lệnh thay tham số là argv[2]
 
 	if (input.is_open() == 0) // kiểm tra mở file input
 	{
@@ -246,18 +246,6 @@ int main(int argc, char *argv[])
 	}
 	input.close();
 	output.close();
-
-	//string a = "00111111100011110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001";
-	//string b = "00111111100011110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-
-	//QFloat res1, res2;
-	//res1 = res1.fromBinToQFloat(a);
-	//res2 = res2.fromBinToQFloat(b);
-	////
-	////QFloat res = res1 / res2;
-	////////QInt res = res1 << 9378;
-	//cout << res1.QFloatToDecStr() << endl;
-	//cout << res2.QFloatToDecStr() << endl;
 	system("pause");
 	return 0;
 }
