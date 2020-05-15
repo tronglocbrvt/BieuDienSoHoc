@@ -145,7 +145,7 @@ string QInt::QIntToBinStr()
 	// xóa số 0 thừa
 	for (int i = 0; i < NUM_BIT - 1; i++) // chừa lại bit cuối
 	{
-		if (res[i] == '0')
+		if (res[i] == '0' && res != "0")
 		{
 			res.erase(res.begin() + 0);
 			i--;
@@ -628,7 +628,7 @@ void QInt::SetBit(unsigned short i, unsigned short bit)
 
 	if (bit == 1) // nếu là bit 1
 	{
-		data[block] = data[block] | (1 << pos); // XOR với 1 ra 1
+		data[block] = data[block] | (1 << pos); // OR với 1 ra 1
 	}
 	else { // bit 0
 		data[block] = data[block] & (~(1 << pos)); // AND với 0 ra 0

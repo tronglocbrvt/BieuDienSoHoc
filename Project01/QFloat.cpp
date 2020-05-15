@@ -555,7 +555,13 @@ QFloat QFloat::operator*(const QFloat& f)
 	//Tính số mũ
 	e += s;
 	if (e < -BIAS + 1)
-		return QFloat(); //Underflow, trả về 0
+		//Underflow, trả về 0
+	{
+		if (sign)
+			return QFloat("+0");
+		else
+			return QFloat("-0");
+	}
 	else if (e > BIAS)
 	{
 		if (sign == 1)
@@ -675,7 +681,13 @@ QFloat QFloat::operator/(const QFloat& f)
 	//Tính số mũ
 	e += s;
 	if (e < -BIAS + 1)
-		return QFloat(); //Underflow, trả về 0
+		//Underflow, trả về 0
+	{
+		if (sign)
+			return QFloat("+0");
+		else
+			return QFloat("-0");
+	}
 	else if (e > BIAS)
 	{
 		if (sign == 1)
@@ -769,6 +781,21 @@ QFloat::QFloat(string str)
 			SetBit(MAX_LENGTH - 1 - i, 0);
 		for (int i = MAX_LENGTH - 32; i < MAX_LENGTH; i++)
 			SetBit(MAX_LENGTH - 1 - i, 1);
+
+		if (str[0] == '-') // là số âm
+			SetBit(MAX_LENGTH - 1, 1);
+		else // là số dương
+			SetBit(MAX_LENGTH - 1, 0);
+	}
+	else if (str == "-0" || str == "+0")
+	{
+		// Đặt phần mũ -> toàn bit 1
+		for (int i = 1; i <= EXPONENT; i++)
+			SetBit(MAX_LENGTH - 1 - i, 0);
+
+		// Đặt phần trị -> toàn bit 0
+		for (int i = EXPONENT + 1; i < MAX_LENGTH; i++)
+			SetBit(MAX_LENGTH - 1 - i, 0);
 
 		if (str[0] == '-') // là số âm
 			SetBit(MAX_LENGTH - 1, 1);
@@ -1179,16 +1206,23 @@ bool isStringBigger(const string& s1, const string& s2) // a > b, length equal
 	return false;
 }
 
+string removeZeroFront(const string& a)
+{
+	if (a.find("1") == string::npos)
+		return "0";
+	return a.substr(a.find("1"));
+}
+
 string divideBinary(string& a, string& b, int& decimalPoint)
 {
 	string R = "";
-	string A = a;
-	string B = b;
+	string A = removeZeroFront(a);
+	string B = removeZeroFront(b);
 	string result;
 	int count = 1;
 	bool stopCount = true;
 
-	if (a.length() < b.length())
+	if (A.length() < B.length())
 	{
 		R = A;
 		A = "";
@@ -1233,7 +1267,5 @@ string divideBinary(string& a, string& b, int& decimalPoint)
 	}
 
 	decimalPoint = result.length() - count;
-	if (result.find("1") == string::npos)
-		return "0";
-	return result.substr(result.find("1"));
+	return removeZeroFront(result);
 }
