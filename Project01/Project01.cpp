@@ -246,7 +246,6 @@ int main(int argc, char *argv[])
 	}
 	input.close();
 	output.close();
-	system("pause");
 	return 0;
 }
 

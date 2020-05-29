@@ -476,9 +476,10 @@ QInt & QInt::operator=(const QInt& q)
 {
 	if (this != &q)
 	{
-		for (int i = 0; i < NUM_BLOCK; i++)
+		QInt other = q;
+		for (int i = 0; i < NUM_BIT; i++)
 		{
-			this->data[i] = q.data[i];
+			this->SetBit(i, other.GetBit(i));
 		}
 	}
 
@@ -490,11 +491,17 @@ QInt & QInt::operator=(const QInt& q)
 // toán tử NOT
 QInt& QInt::operator~()
 {
-	for (int i = 0; i < NUM_BLOCK; i++)
+	for (int i = 0; i < NUM_BIT; i++)
 	{
-		this->data[i] = ~this->data[i];
+		if (GetBit(i) == 1)
+		{
+			SetBit(i, 0);
+		}
+		else
+		{
+			SetBit(i, 1);
+		}
 	}
-
 	return *this;
 }
 
@@ -502,10 +509,17 @@ QInt& QInt::operator~()
 QInt QInt::operator&(const QInt & q)
 {
 	QInt res;
-
-	for (int i = 0; i < NUM_BLOCK; i++)
+	QInt other = q;
+	for (int i = 0; i < NUM_BIT; i++)
 	{
-		res.data[i] = this->data[i] & q.data[i];
+		if (GetBit(i) == 1 && other.GetBit(i) == 1)
+		{
+			res.SetBit(i, 1);
+		}
+		else
+		{
+			res.SetBit(i, 0);
+		}
 	}
 
 	return res;
@@ -515,10 +529,17 @@ QInt QInt::operator&(const QInt & q)
 QInt QInt::operator|(const QInt & q)
 {
 	QInt res;
-
-	for (int i = 0; i < NUM_BLOCK; i++)
+	QInt other = q;
+	for (int i = 0; i < NUM_BIT; i++)
 	{
-		res.data[i] = this->data[i] | q.data[i];
+		if (GetBit(i) == 0 && other.GetBit(i) == 0)
+		{
+			res.SetBit(i, 0);
+		}
+		else
+		{
+			res.SetBit(i, 1);
+		}
 	}
 
 	return res;
@@ -528,10 +549,17 @@ QInt QInt::operator|(const QInt & q)
 QInt QInt::operator^(const QInt & q)
 {
 	QInt res;
-
-	for (int i = 0; i < NUM_BLOCK; i++)
+	QInt other = q;
+	for (int i = 0; i < NUM_BIT; i++)
 	{
-		res.data[i] = this->data[i] ^ q.data[i];
+		if (GetBit(i) == other.GetBit(i))
+		{
+			res.SetBit(i, 0);
+		}
+		else
+		{
+			res.SetBit(i, 1);
+		}
 	}
 
 	return res;
